@@ -792,7 +792,7 @@ public abstract class CouchDBDao<E extends BTSDBBaseObject, K extends Serializab
 					
 		//execute query
 		response = srq.setFrom(0)
-				.setSize(1000)
+				.setSize(2000)
 				.setExplain(true)
 				.execute()
 				.actionGet();

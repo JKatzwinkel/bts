@@ -1265,7 +1265,8 @@ public class EgyLemmatizerPart implements SearchViewer {
 				// remove those lemma entries that are obsolete or of root type
 				// sort entries using EgyLemmaEntryComparator and processWordChar(searchString) [not anymore]
 				// limit results to 500
-				List<BTSLemmaEntry> filtered = sortAndfilterLemmaProposals(obs, searchString, 500);
+				List<BTSLemmaEntry> filtered = sortAndfilterLemmaProposals(obs, searchString, -1);
+				System.out.println("Load results: "+filtered.size());
 
 				if (monitor.isCanceled())
 					return Status.CANCEL_STATUS;
@@ -1318,7 +1319,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 	 */
 	protected List<BTSLemmaEntry> sortAndfilterLemmaProposals(List<BTSLemmaEntry> obs, String searchString, int n) {
 		List<BTSLemmaEntry> filtered = lemmatizerController.filterAndSortLemmaProposals(obs, searchString);
-		return filtered.subList(0, Math.min(filtered.size(), n));
+		return (n > 0) ? filtered.subList(0, Math.min(filtered.size(), n)) : filtered;
 	}
 
 	@Inject
