@@ -910,7 +910,12 @@ public class CouchDBManager implements DBManager {
 				// .put("http.enabled", ("true".equals(search_http_enabled)))
 				.put("http.enabled", true)
 				.put("mappings." + collection + ".date_detection", false)
-				.put("mappings." + collection + ".date_detection", 0);
+				.put("mappings." + collection + ".date_detection", 0)
+				.put("analysis.analyzer.wlist.type", "pattern")
+				.put("analysis.analyzer.wlist.filter.0", "lowercase")
+				.put("analysis.analyzer.wlist.pattern", "[() ]+")
+				.put("analysis.analyzer.wlist.lowercase", "true");
+				
 
 		if (esClient.admin().indices().prepareExists(collection).execute()
 				.actionGet().isExists()) {
@@ -928,6 +933,18 @@ public class CouchDBManager implements DBManager {
 		try {
 			mapping = jsonBuilder().startObject().startObject(collection)
 					.field("date_detection", "false").endObject().endObject();
+			mapping = jsonBuilder()
+					.startObject()
+					 .startObject(collection)
+					  .startObject("properties")
+					   .startObject("name")
+					    .field("type", "String")
+					    .field("analyzer", "wlist")
+					   .endObject()
+					  .endObject()
+					 .endObject()
+					.endObject();
+			System.out.println(mapping.string());
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -946,7 +963,7 @@ public class CouchDBManager implements DBManager {
 				success = false;
 			}
 			if (monitor != null) {
-				monitor.worked(1);
+				///monitor.worked(1);
 				if (monitor.isCanceled())
 					return false;
 			}
@@ -968,7 +985,7 @@ public class CouchDBManager implements DBManager {
 					success = false;
 				}
 				if (monitor != null) {
-					monitor.worked(1);
+					//monitor.worked(1);
 					if (monitor.isCanceled())
 						return false;
 				}
