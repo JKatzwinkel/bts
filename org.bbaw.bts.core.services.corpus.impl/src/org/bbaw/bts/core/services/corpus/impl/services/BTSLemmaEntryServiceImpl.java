@@ -223,7 +223,10 @@ implements BTSLemmaEntryService, BTSObjectSearchService
 		query.setType(BTSQueryType.LEMMA);
 		query.setQueryBuilder(QueryBuilders.boolQuery()
 					.should(QueryBuilders.matchQuery("name", chars))
-					.should(QueryBuilders.termQuery("name",chars))
+					//.should(QueryBuilders.termQuery("name",chars.toLowerCase()))
+					//.should(QueryBuilders.matchPhraseQuery("name", chars))
+					//.should(QueryBuilders.matchPhrasePrefixQuery("name", chars).analyzer("wlist"))
+					.should(QueryBuilders.prefixQuery("name", chars))
 					);
 		query.setAutocompletePrefix(chars);
 		return query;
