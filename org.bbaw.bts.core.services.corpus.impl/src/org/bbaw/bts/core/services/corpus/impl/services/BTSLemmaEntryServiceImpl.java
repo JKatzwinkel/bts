@@ -206,7 +206,7 @@ implements BTSLemmaEntryService, BTSObjectSearchService
 
 	@Override
 	public List<BTSLemmaEntry> findLemmaProposals(String prefix, IProgressMonitor monitor) {
-		BTSQueryRequest query = createLemmaSearchQuery(prefix);
+		BTSQueryRequest query = createLemmaSearchQuery(prefix.toLowerCase());
 //		query.setResponseFields(BTSConstants.SEARCH_BASIC_RESPONSE_FIELDS);
 		System.out.println(query.getQueryId());
 		List<BTSLemmaEntry> children = query(query, BTSConstants.OBJECT_STATE_ACTIVE, monitor);
@@ -218,6 +218,7 @@ implements BTSLemmaEntryService, BTSObjectSearchService
 	
 	@Override
 	public BTSQueryRequest createLemmaSearchQuery(String chars) {
+		chars = chars.toLowerCase();
 		BTSQueryRequest query = new BTSQueryRequest(chars);
 		query.setType(BTSQueryType.LEMMA);
 		query.setQueryBuilder(QueryBuilders.boolQuery()
