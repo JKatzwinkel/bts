@@ -252,9 +252,16 @@ public class ApplicationUpdateControllerImpl extends Job implements
         operation.getProvisioningContext().setArtifactRepositories(new URI[] { uri });
         operation.getProvisioningContext().setMetadataRepositories(new URI[] { uri });
         
-        // perform operation
-        IStatus updateStatus = operation.resolveModal(monitor);
-        info("P2 Update Status : " + updateStatus.getCode());
+		// perform operation. Abort on unknown error.
+		IStatus updateStatus;
+		try {
+			updateStatus = operation.resolveModal(monitor);
+			info("P2 Update Status : " + updateStatus.getCode());
+		} catch (Exception e) {
+			info("P2: Could not check for updates; "+e.getMessage());
+			status = EUpdateStatusType.CHECK_FAILED;
+			return Status.CANCEL_STATUS;
+		}
         
         // if nothing to do, do nothing
         if (updateStatus.getCode() == UpdateOperation.STATUS_NOTHING_TO_UPDATE) {
