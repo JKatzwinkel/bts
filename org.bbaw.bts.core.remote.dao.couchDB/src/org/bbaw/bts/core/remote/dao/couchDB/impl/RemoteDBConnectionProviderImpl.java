@@ -53,49 +53,16 @@ public class RemoteDBConnectionProviderImpl implements RemoteDBConnectionProvide
 	private String host;
 	private int port;
 
+	private Map<String, CouchDbClient> remoteCouchDbClients = new HashMap<>();
+
 	@Override
 	public <T> T getDBClient(Class<T> clazz, String path)
 	{
-		if (clazz != CouchDbClient.class)
-		{
+		if (clazz != CouchDbClient.class) {
 			throw new BTSDBException("No supported DBClient type: " + clazz.getName());
 		}
-		if (protocol == null)
-		{
-			initDBHost();
-		}
-		Map<String, CouchDbClient> clients = (Map<String, CouchDbClient>) context
-				.get(RemoteDaoConstants.DB_CLIENT_POOL_MAP);
-		if (clients == null)
-		{
-			clients = new HashMap<String, CouchDbClient>(10);
-		}
-		CouchDbClient dbClient = clients.get(path);
-		if (user == null || password == null)
-		{
-			ISecurePreferences secPrefs = SecurePreferencesFactory.getDefault().node("org.bbaw.bts.app");
-			ISecurePreferences auth = secPrefs.node("auth");
-			try {
-				user = auth.get("username", null);
-				password = auth.get("password", null);
-			} catch (StorageException e) {
-			}
-		}
-		if (dbClient == null)
-		{
-			// FIXME check if db is set to authentication otherwise do so
-			// if it is an admin party then creating a new db if not exist will
-			// lead to http exception
-			CouchDbProperties properties = new CouchDbProperties().setDbName(path).setCreateDbIfNotExist(true)
-					.setProtocol(protocol).setHost(host).setPort(port).setMaxConnections(100).setConnectionTimeout(0);
-			if (user != null && password != null)
-			{
-				properties.setUsername(user).setPassword(password);
-			}
-			dbClient = new CouchDbClient(properties);
-			clients.put(path, dbClient);
-		}
-		return (T) dbClient;
+
+		return (T) getRemoteDbClient(path);
 	}
 
 	private void initDBHost()
@@ -120,6 +87,68 @@ public class RemoteDBConnectionProviderImpl implements RemoteDBConnectionProvide
 		}
 		System.out.println("CouchDBDao initDBHost " + remote_db_url);
 
+	}
+
+	private boolean retrieveLoginDataFromSecurePrefs() {
+		ISecurePreferences secPrefs = SecurePreferencesFactory.getDefault().node("org.bbaw.bts.app");
+		ISecurePreferences auth = secPrefs.node("auth");
+		try {
+			user = auth.get("username", null);
+			password = auth.get("password", null);
+		} catch (StorageException e) {
+			return false;
+		}
+		return (user != null && password != null);
+	}
+
+	private CouchDbClient initializeRemoteCouchDbClient(String path) {
+		// look up remote DB address in preferences
+		remote_db_url = getRemoteDBURL();
+		System.out.println("CouchDBDao initDBHost " + remote_db_url);
+
+		// try to get login data if necessary
+		if (user == null || password == null) {
+			boolean loginDataAvailable = retrieveLoginDataFromSecurePrefs();
+			System.out.println("Retrieval of secure storage login data successful: "+loginDataAvailable);
+		}
+
+		// populate client configuration from preferences
+		CouchDbProperties couchDbProperties = new CouchDbProperties();
+		try {
+			// create URL object from remote url string found in preferences
+			URL remoteDBURL = new URL(remote_db_url);
+
+			// configure couchdb properties according to known remote address
+			couchDbProperties
+					.setDbName(path)
+					.setCreateDbIfNotExist(true)
+					.setProtocol(remoteDBURL.getProtocol()) // TODO handle absent
+					.setHost(remoteDBURL.getHost())
+					.setPort(remoteDBURL.getPort()) // TODO handle absent
+					.setMaxConnections(100)
+					.setConnectionTimeout(0);
+
+			// set login data
+			couchDbProperties.setUsername(user).setPassword(password);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// create client for couchdb at remote address
+		CouchDbClient remoteCouchDbClient = new CouchDbClient(couchDbProperties);
+
+		return remoteCouchDbClient;
+	}
+
+	private CouchDbClient getRemoteDbClient(String path) {
+		// look up client to remote collection under path
+		// create one if none found
+		if (!remoteCouchDbClients.containsKey(path)) {
+			remoteCouchDbClients.put(path,
+					initializeRemoteCouchDbClient(path));
+		}
+		return remoteCouchDbClients.get(path);
 	}
 
 	@Override
@@ -156,7 +185,8 @@ public class RemoteDBConnectionProviderImpl implements RemoteDBConnectionProvide
 	@Override
 	public String getRemoteDBURL()
 	{
-		return remote_db_url;
+		return ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app")
+				.get(BTSPluginIDs.PREF_REMOTE_DB_URL, "http://aaew64.bbaw.de:9589");
 	}
 
 	@Override
@@ -166,35 +196,22 @@ public class RemoteDBConnectionProviderImpl implements RemoteDBConnectionProvide
 		{
 			throw new BTSDBException("No supported DBClient type: " + clazz.getName());
 		}
-		if (protocol == null)
-		{
-			initDBHost();
+
+		if (userName != null && password != null) {
+			user = userName;
+			this.password = password;
 		}
-		Map<String, CouchDbClient> clients = (Map<String, CouchDbClient>) context
-				.get(RemoteDaoConstants.DB_CLIENT_POOL_MAP);
-		if (clients == null)
-		{
-			clients = new HashMap<String, CouchDbClient>(10);
-		}
-		CouchDbClient dbClient = clients.get(path);
-		if (dbClient == null)
-		{
-			CouchDbProperties properties = new CouchDbProperties().setDbName(path).setCreateDbIfNotExist(true)
-					.setProtocol(protocol).setHost(host).setPort(port).setMaxConnections(100).setConnectionTimeout(0)
-					.setUsername(userName).setPassword(password);
-			dbClient = new CouchDbClient(properties);
-			clients.put(path, dbClient);
-		}
-		return (T) dbClient;
+		return (T) getRemoteDbClient(path);
 	}
+
 	@Override
 	public void purgeDBConnectionPool() {
-		Map<String, CouchDbClient> clients = (Map<String, CouchDbClient>) context.get(RemoteDaoConstants.DB_CLIENT_POOL_MAP);
-		if (clients == null)
-		{
-			return;
+
+		for (CouchDbClient client : remoteCouchDbClients.values()) {
+			client.shutdown();
 		}
-		clients.clear();
-		
+
+		remoteCouchDbClients.clear();
+
 	}
 }
