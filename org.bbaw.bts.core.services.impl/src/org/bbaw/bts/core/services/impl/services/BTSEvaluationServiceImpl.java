@@ -43,6 +43,7 @@ import org.bbaw.bts.core.remote.dao.RemoteDBManager;
 import org.bbaw.bts.core.services.BTSEvaluationService;
 import org.bbaw.bts.core.services.BTSProjectService;
 import org.bbaw.bts.core.services.BTSUserGroupService;
+import org.bbaw.bts.core.services.SystemTimeService;
 import org.bbaw.bts.db.DBManager;
 import org.bbaw.bts.searchModel.BTSModelUpdateNotification;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -66,8 +67,6 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 {
 
 	protected static final String NOTIFICATION = "notification";
-
-	private static final long TIME_CHECK_INFERVAL = 3000000;
 
 	@Inject
 	@Optional
@@ -113,14 +112,7 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 
 	private String btsUUID = prefs.get(BTSConstants.BTS_UUID, null);
 
-	private Long systemClockDifferenceLong;
 
-	@Inject
-	@Optional
-	@Preference(value = BTSPluginIDs.PREF_SYSTEM_CLOCK_DIFFERENCE, nodePath = "org.bbaw.bts.app")
-	private String systemClockDifference;
-
-	private Date lastTimeCheck;
 
 	@Inject
 	private BTSUserDao userDao;
@@ -133,6 +125,11 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 
 	
 	private BTSUserGroupService userGroupService;
+
+	@Inject
+	private SystemTimeService systemTimeService;
+
+
 	
 	@Override
 	public boolean filter(Object object)
@@ -616,96 +613,14 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 	}
 
 	protected Date getCurrentTimeStamp() {
-		Date local = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
-		Long difference = getSystemClockDifference(local);
+		Date local = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime(); // XXX shit
+		Long difference = systemTimeService.getSystemClockDifference(local);
 		long system = local.getTime();
 		Date now = new Date(system + difference);
 		return now;
 	}
 
-	private Long getSystemClockDifference(Date local) {
-		if (lastTimeCheck == null || local.after(new Date(lastTimeCheck.getTime() + TIME_CHECK_INFERVAL)))
-		{
-			systemClockDifferenceLong = null;
-			systemClockDifference = null;
-		}
-		if (systemClockDifferenceLong == null)
-		{
-			if (systemClockDifference == null && !"".equals(systemClockDifference))
-			{
-				systemClockDifference = checkAndCalculateClockDifference();
-			}
-			try {
-				systemClockDifferenceLong = new Long(systemClockDifference);
-			} catch (NumberFormatException e) {
-				systemClockDifferenceLong = null;
-				e.printStackTrace();
-			}
-		}
-		return systemClockDifferenceLong;
-	}
 
-	private String checkAndCalculateClockDifference() {
-		long ntp = 0;
-		String servers = ConfigurationScope.INSTANCE
-				.getNode("org.bbaw.bts.app").get("ntp_servers",
-						BTSConstants.DEFAULT_NTP_SERVERS);
-		logger.info("NTP servers: " + servers);
-		if (servers == null) {
-			return new Long(ntp).toString();
-		}
-		String[] serverArray = servers.split(BTSCoreConstants.SPLIT_PATTERN);
-		NTPUDPClient client = new NTPUDPClient();
-		// We want to timeout if a response takes longer than 7 seconds
-		client.setDefaultTimeout(7000);
-		TimeInfo info = null;
-		try {
-			client.open();
-			for (String arg : serverArray) {
-				InetAddress hostAddr = null;
-				try {
-					hostAddr = InetAddress.getByName(arg);
-					logger.info("> " + hostAddr.getHostName() + "/"
-							+ hostAddr.getHostAddress());
-					info = client.getTime(hostAddr);
-					break;
-				} catch (IOException ioe) {
-					logger.error(ioe, "Inaccessable host address: " + hostAddr);
-				}
-			}
-		} catch (SocketException e) {
-			logger.error(e);
-		}
-		client.close();
-
-		if (info == null)
-		{
-			return new Long(ntp).toString();
-		}
-        NtpV3Packet message = info.getMessage();
-
-		 // Transmit time is time reply sent by server (t3)
-        TimeStamp xmitNtpTime = message.getTransmitTimeStamp();
-        logger.info(" Transmit Timestamp:\t" + xmitNtpTime + "  " + xmitNtpTime.toDateString());
-
-        info.computeDetails(); // compute offset/delay if not already done
-        Long offsetValue = info.getOffset();
-        Long delayValue = info.getDelay();
-        String delay = (delayValue == null) ? "N/A" : delayValue.toString();
-        String offset = (offsetValue == null) ? "N/A" : offsetValue.toString();
-
-        logger.info(" Roundtrip delay(ms)=" + delay
-                + ", clock offset(ms)=" + offset); // offset in ms
-        ntp = xmitNtpTime.getTime();
-		logger.info("NTP: " + ntp);
-		Date d = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
-		lastTimeCheck = d;
-		long system = d.getTime();
-		long diff = ntp - system;
-		logger.info("Difference NTP - system: " + diff);
-
-		return new Long(diff).toString();
-	}
 
 	private Map<String, DBLease> findLockingMap() {
 		Object m = context.get(BTSCoreConstants.LOCKING_MAP_KEY);

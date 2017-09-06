@@ -71,8 +71,6 @@ public class BTSPluginIDs
 
 	public static final String CMD_ID_EDIT_PREFERENCE = "org.eclipse.ui.window.preferences";
 
-	public static final String PREF_SYSTEM_CLOCK_DIFFERENCE = "system_clock_difference";
-
 	public static final String POPMENU_CORPUS_NAVIGATOR_TREE_MENU = "org.bbaw.bts.ui.corpus.corpusnavigator.popupmenu";
 
 	public static final String PART_ID_EGY_TEXTEDITOR = "org.bbaw.bts.ui.corpus.egy.part.textEditor";

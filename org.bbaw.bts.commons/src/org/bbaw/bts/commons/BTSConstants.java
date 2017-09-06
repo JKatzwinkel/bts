@@ -109,6 +109,9 @@ public class BTSConstants
 	public static final String DEFAULT_LOCALE_LANG = "en";
 	public static final String BTS_UUID = "bts_uuid";
 	public static final String DEFAULT_NTP_SERVERS = "time.bbaw.de|times.tubit.tu-berlin.de";
+	public static final String PREF_NTP_SERVERS = "ntp_servers";
+	public static final String PREF_SYSTEM_CLOCK_DIFFERENCE = "system_clock_difference";
+	public static final String PREF_NTP_LATEST = "ntp_time_of_latest_request";
 	public static final String OWNER_REFERENCED_TYPES_SEPERATOR = ">>";
 	public static final String OWNER_REFERENCED_TYPES_PATH_SEPERATOR = ".";
 	public static final String OWNER_REFERENCED_TYPES_LIST_SEPERATOR = ",";
