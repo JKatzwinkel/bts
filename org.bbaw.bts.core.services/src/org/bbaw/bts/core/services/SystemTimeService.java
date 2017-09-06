@@ -5,4 +5,6 @@ import java.util.Date;
 public interface SystemTimeService {
 
 	Long getSystemClockDifference(Date local);
+
+	Date getAdjustedTime();
 }

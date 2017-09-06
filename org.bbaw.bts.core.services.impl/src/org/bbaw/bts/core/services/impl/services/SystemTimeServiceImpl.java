@@ -14,7 +14,6 @@ import org.apache.commons.net.ntp.NtpV3Packet;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.bbaw.bts.commons.BTSConstants;
-import org.bbaw.bts.commons.BTSPluginIDs;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
 import org.bbaw.bts.core.services.SystemTimeService;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
@@ -22,23 +21,19 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.log.Logger;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class SystemTimeServiceImpl implements SystemTimeService {
 
 
-	private static final long TIME_CHECK_INTERVAL = 3000000;
+	private static final long TIME_CHECK_INTERVAL = 30000000; // 8 hours
 
 	// configurationscope preferences
 	private IEclipsePreferences prefs = ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app");
 
-	@Inject
-	@Optional
-	@Preference(value = BTSConstants.PREF_SYSTEM_CLOCK_DIFFERENCE, nodePath = "org.bbaw.bts.app")
-	private Long systemClockDifference;
+	private long systemClockDifference = 0;
 
-	@Inject
-	@Preference(value = BTSConstants.PREF_NTP_LATEST, nodePath = "org.bbaw.bts.app")
-	private Long lastTimeCheck;
+	private long lastTimeCheck = 1;
 
 	@Inject
 	private Logger logger;
@@ -46,14 +41,38 @@ public class SystemTimeServiceImpl implements SystemTimeService {
 	public SystemTimeServiceImpl() {
 		System.out.println("init system time service");
 
+		lastTimeCheck = prefs.getLong(BTSConstants.PREF_NTP_LATEST, 0);
+		systemClockDifference = prefs.getLong(BTSConstants.PREF_SYSTEM_CLOCK_DIFFERENCE, 0);
+		
+		System.out.println("ntp latest check: "+lastTimeCheck);
+		System.out.println("ntp clock diff: "+systemClockDifference);
+		
+		//getSystemClockDifference(Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime());
 
 	}
 
 	@Override
+	public Date getAdjustedTime() {
+		Date local = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime(); // XXX shit
+		Long difference = getSystemClockDifference(local);
+		long system = local.getTime();
+		return new Date(system + difference);
+	}
+
+	@Override
 	public Long getSystemClockDifference(Date local) {
-		if (lastTimeCheck == null || (local.getTime() > lastTimeCheck + TIME_CHECK_INTERVAL))
+		if (lastTimeCheck < 0 || (local.getTime() > lastTimeCheck + TIME_CHECK_INTERVAL))
 		{
 			systemClockDifference = checkAndCalculateClockDifference();
+			lastTimeCheck = local.getTime();
+			prefs.putLong(BTSConstants.PREF_NTP_LATEST, lastTimeCheck);
+			prefs.putLong(BTSConstants.PREF_SYSTEM_CLOCK_DIFFERENCE, systemClockDifference);
+			try {
+				prefs.flush();
+			} catch (BackingStoreException e) {
+				System.out.println("error saving preferences.");
+				e.printStackTrace();
+			}
 		}
 		return systemClockDifference;
 	}
@@ -62,7 +81,7 @@ public class SystemTimeServiceImpl implements SystemTimeService {
 		long ntp = 0;
 		String servers = prefs.get(BTSConstants.PREF_NTP_SERVERS,
 						BTSConstants.DEFAULT_NTP_SERVERS);
-		logger.info("NTP servers: " + servers);
+		System.out.println("NTP servers: " + servers);
 		if (servers == null) {
 			return ntp;
 		}
@@ -77,7 +96,7 @@ public class SystemTimeServiceImpl implements SystemTimeService {
 				InetAddress hostAddr = null;
 				try {
 					hostAddr = InetAddress.getByName(arg);
-					logger.info("> " + hostAddr.getHostName() + "/"
+					System.out.println("> " + hostAddr.getHostName() + "/"
 							+ hostAddr.getHostAddress());
 					info = client.getTime(hostAddr);
 					break;
@@ -110,11 +129,6 @@ public class SystemTimeServiceImpl implements SystemTimeService {
                 + ", clock offset(ms)=" + offset); // offset in ms
         ntp = xmitNtpTime.getTime();
 		logger.info("NTP: " + ntp);
-		Date d = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
-		lastTimeCheck = d.getTime();
-		long system = d.getTime();
-		long diff = ntp - system;
-		logger.info("Difference NTP - system: " + diff);
 
 		return offsetValue;
 	}

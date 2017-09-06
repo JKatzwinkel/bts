@@ -1,23 +1,14 @@
 package org.bbaw.bts.core.services.impl.services;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.Vector;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.net.ntp.NTPUDPClient;
-import org.apache.commons.net.ntp.NtpV3Packet;
-import org.apache.commons.net.ntp.TimeInfo;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.bbaw.bts.btsmodel.AdministrativDataObject;
 import org.bbaw.bts.btsmodel.BTSDBBaseObject;
 import org.bbaw.bts.btsmodel.BTSDBCollectionRoleDesc;
@@ -37,7 +28,6 @@ import org.bbaw.bts.core.commons.exceptions.BTSLockingException;
 import org.bbaw.bts.core.dao.BTSUserDao;
 import org.bbaw.bts.core.dao.DBLeaseDao;
 import org.bbaw.bts.core.dao.GeneralPurposeDao;
-import org.bbaw.bts.core.dao.GenericDao;
 import org.bbaw.bts.core.remote.dao.RemoteDBLeaseDao;
 import org.bbaw.bts.core.remote.dao.RemoteDBManager;
 import org.bbaw.bts.core.services.BTSEvaluationService;
@@ -613,10 +603,7 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 	}
 
 	protected Date getCurrentTimeStamp() {
-		Date local = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime(); // XXX shit
-		Long difference = systemTimeService.getSystemClockDifference(local);
-		long system = local.getTime();
-		Date now = new Date(system + difference);
+		Date now = systemTimeService.getAdjustedTime();
 		return now;
 	}
 
