@@ -5,7 +5,6 @@ import org.bbaw.bts.core.services.impl.services.SystemTimeServiceImpl;
 import org.eclipse.e4.core.contexts.ContextFunction;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
-import org.eclipse.e4.ui.model.application.MApplication;
 
 public class SystemTimeServiceContextFunction extends ContextFunction {
 	
@@ -13,12 +12,8 @@ public class SystemTimeServiceContextFunction extends ContextFunction {
 	public Object compute(IEclipseContext context) {
 		
 		System.out.println("initialize system time service.");
-		
-		IEclipseContext ctx = context.get(MApplication.class) != null
-				? context.get(MApplication.class).getContext()
-						: context;
 				
-		SystemTimeService service = ContextInjectionFactory.make(SystemTimeServiceImpl.class, ctx);
+		SystemTimeService service = ContextInjectionFactory.make(SystemTimeServiceImpl.class, context);
 		
 		return service;
 		
