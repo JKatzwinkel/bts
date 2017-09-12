@@ -1045,7 +1045,7 @@ public class BTSEvaluationServiceImpl implements BTSEvaluationService
 		{
 			return true;
 		}
-		return dbCollectionExists(dbCollectionName, true);
+		return !dbCollectionExists(dbCollectionName, true);
 	}
 
 	private boolean dbCollectionExists(String dbCollectionName, boolean dbCollectionExistsRemote) {
