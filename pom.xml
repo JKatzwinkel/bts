@@ -75,12 +75,6 @@
 			<layout>p2</layout>
 		</repository>
 		<repository>
-			<id>bts-mvn-build-extras</id>
-			<name>BTS BUILD Rep</name>
-			<url>http://telota.bbaw.de/bts-update/extras</url>
-			<layout>p2</layout>
-		</repository>
-		<repository>
 			<id>neon</id>
 			<url>http://download.eclipse.org/releases/neon</url>
 			<layout>p2</layout>
