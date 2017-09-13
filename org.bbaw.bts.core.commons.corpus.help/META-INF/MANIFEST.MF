@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: BTS Help Resources
 Bundle-SymbolicName: org.bbaw.bts.core.commons.corpus.help;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 3.1.0.qualifier
 Bundle-Activator: org.bbaw.bts.core.commons.corpus.help.Activator
 Bundle-Vendor: BBAW
 Export-Package: org.bbaw.bts.core.commons.corpus.help
@@ -18,6 +18,3 @@ Import-Package: org.bbaw.bts.ui.commons.utils,
  org.eclipse.ui,
  org.osgi.framework;version="1.3.0"
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: src/,
- .,
- resources/

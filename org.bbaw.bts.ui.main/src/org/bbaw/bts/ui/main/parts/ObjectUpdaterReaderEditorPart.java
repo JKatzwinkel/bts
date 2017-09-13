@@ -1,6 +1,5 @@
 package org.bbaw.bts.ui.main.parts;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -25,10 +24,6 @@ import org.bbaw.bts.ui.commons.viewerSorter.BTSUserManagerViewerComparator;
 import org.bbaw.bts.ui.resources.BTSResourceProvider;
 import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.core.databinding.observable.list.WritableList;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.UISynchronize;
@@ -41,10 +36,8 @@ import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
-import org.eclipse.jface.databinding.swt.SWTObservables;
+import org.eclipse.jface.databinding.swt.DisplayRealm;
 import org.eclipse.jface.databinding.viewers.ObservableListContentProvider;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -333,7 +326,7 @@ public class ObjectUpdaterReaderEditorPart extends Composite {
 	}
 
 	private void loadAllUserGroups() {
-		Realm.runWithDefault(SWTObservables.getRealm(Display.getDefault()), new Runnable() {
+		Realm.runWithDefault(DisplayRealm.getRealm(Display.getDefault()), new Runnable() {
 			@Override
 			public void run() {
 				List<BTSUserGroup> groups = userManagerController.listUserGroups(null);
@@ -347,7 +340,7 @@ public class ObjectUpdaterReaderEditorPart extends Composite {
 	}
 
 	private void loadAllUsers() {
-		Realm.runWithDefault(SWTObservables.getRealm(Display.getDefault()), new Runnable() {
+		Realm.runWithDefault(DisplayRealm.getRealm(Display.getDefault()), new Runnable() {
 			@Override
 			public void run() {
 				List<BTSUser> users = userManagerController.listUsers(null);

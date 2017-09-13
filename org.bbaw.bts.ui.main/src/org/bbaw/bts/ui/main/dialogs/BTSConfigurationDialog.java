@@ -30,7 +30,7 @@ import org.bbaw.bts.ui.commons.validator.StringIsRegexPatternValidator;
 import org.bbaw.bts.ui.commons.validator.StringNotEmptyValidator;
 import org.bbaw.bts.ui.commons.viewerSorter.BTSObjectByNameViewerSorter;
 import org.bbaw.bts.ui.commons.widgets.TranslationEditorComposite;
-import org.bbaw.bts.ui.main.dialogs.btsConfigDialog.provider.BTSObjectPivot;
+//import org.bbaw.bts.ui.main.dialogs.btsConfigDialog.provider.BTSObjectPivot;
 import org.bbaw.bts.ui.main.handlers.NewConfigurationHandler;
 import org.bbaw.bts.ui.main.objectTypeSelector.ObjectTypeSelectionTreeComposite;
 import org.bbaw.bts.ui.main.objectTypeSelector.RelationSubjectObjectTypesSelectionComposite;
@@ -71,6 +71,7 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -79,10 +80,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerSorter;
-import org.eclipse.ocl.examples.pivot.delegate.OCLDelegateDomain;
-import org.eclipse.ocl.examples.xtext.essentialocl.EssentialOCLStandaloneSetup;
-import org.eclipse.ocl.examples.xtext.essentialocl.ui.internal.EssentialOCLActivator;
-import org.eclipse.ocl.examples.xtext.essentialocl.ui.model.BaseDocument;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.KeyEvent;
@@ -239,6 +237,8 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 
 	private Text abbrText_CIEdit;
 
+	private Shell shell;
+
 
 
 	/**
@@ -248,8 +248,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 	 */
 	public BTSConfigurationDialog() {
 		super(new Shell());
-		System.out.println("construct BTSConfigurationDialog");
-
+		shell = getShell();
 	}
 
 	/**
@@ -362,15 +361,38 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				BTSConfig parent = null;
-				if (!(selectedConfig instanceof BTSConfiguration)) {
-					parent = (BTSConfig) selectedConfig.eContainer();
+				if (selectedConfig instanceof BTSConfiguration) {
+					// delete btsconfiguration
+					
+					// warn
+					MessageDialog dialog = new MessageDialog(shell, "Delete Configuration", null,
+						    "WARNING: You are about to delete the currently selected configuration."
+						    + "\n\nDo you really want to delete the configuration with"
+						    + "\nname '"+ ((BTSConfiguration)selectedConfig).getName() 
+						    +"'\nand provider '" +((BTSConfiguration)selectedConfig).getProvider()
+						    +"'?\n\nThis cannot be undone!", MessageDialog.WARNING, new String[] { "Cancel",
+						        "Delete", }, 0);
+						int result = dialog.open();
+						
+					// delete
+						if (result == 1)
+						{
+							configurationController.remove(((BTSConfiguration)selectedConfig));
+							IStructuredSelection sel = (IStructuredSelection) treeViewer.getSelection();
+							TreeNodeWrapper tn = (TreeNodeWrapper) sel.getFirstElement();
+							root.getChildren().remove(tn);
+						}
 				}
-				org.eclipse.emf.common.command.Command command = DeleteCommand
-						.create(getEditingDomain(selectedConfig),
-								selectedConfig);
-				getEditingDomain(selectedConfig).getCommandStack().execute(
-						command);
-				selectedConfig = parent;
+				else
+				{
+					parent = (BTSConfig) selectedConfig.eContainer();
+					org.eclipse.emf.common.command.Command command = DeleteCommand
+							.create(getEditingDomain(selectedConfig),
+									selectedConfig);
+					getEditingDomain(selectedConfig).getCommandStack().execute(
+							command);
+					selectedConfig = parent;
+				}
 				treeViewer.refresh();
 				if (parent == null && root.getChildren().get(0) != null && root.getChildren().get(0) instanceof BTSConfig) {
 					parent = (BTSConfig) root.getChildren().get(0);
@@ -800,7 +822,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 		lblLabel_1.setText("Label");
 
 		labelText_CIEdit = new TranslationEditorComposite(configItemEditComp,
-				SWT.BORDER, null, null, true);
+				SWT.BORDER, true);
 		labelText_CIEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 2, 1));
 
@@ -810,7 +832,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 		lblDescription.setText("Description");
 
 		descText_CIEdit = new TranslationEditorComposite(configItemEditComp,
-				SWT.BORDER, null, null, false);
+				SWT.BORDER, false);
 		descText_CIEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 2, 1));
 
@@ -883,7 +905,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 			
 			@Override
 			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CR) {
+				if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 					BTSConfigItem ci = configurationController
 							.createNewConfigItem(newCIText_ConfigurationEdit
 									.getText());
@@ -1122,7 +1144,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 				
 				@Override
 				public void keyReleased(KeyEvent e) {
-					if (e.keyCode == SWT.CR) {
+					if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 						BTSConfigItem ci = configurationController
 								.createNewConfigItem(newCIText_ConfigurationEdit
 										.getText());
@@ -1167,61 +1189,61 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 			ownerTypeSelector.setPathInput(configItem,
 					getEditingDomain(configItem), null, null, false);
 		}
-		{
-
-			TabItem ownerstabItem = new TabItem(tabfolder, SWT.NONE);
-			ownerstabItem.setText("OCL");
-			EssentialOCLStandaloneSetup.doSetup();
-
-			// inititae static access controller
-			StaticAccessController sa = context
-					.get(StaticAccessController.class);
-			EssentialOCLActivator activator = EssentialOCLActivator
-					.getInstance();
-			Injector injector = activator
-					.getInjector(EssentialOCLActivator.ORG_ECLIPSE_OCL_EXAMPLES_XTEXT_ESSENTIALOCL_ESSENTIALOCL);
-			embeddedEditorFactory = injector
-					.getInstance(EmbeddedEditorFactory.class);
-			Composite ownerEditComp = new Composite(tabfolder, SWT.NONE);
-			ownerEditComp.setLayout(new GridLayout(1, false));
-			ownerstabItem.setControl(ownerEditComp);
-			OCLDelegateDomain.initialize(configItem.eResource()
-					.getResourceSet());
-			// MetaModelManager mmm =
-			// mmm.loadResource(configItem.eResource().getURI(), null, null);
-			IEditedResourceProvider resourceProvider = new IEditedResourceProvider() {
-
-				@Override
-				public XtextResource createResource() {
-					try {
-						ResourceSet resourceSet = new ResourceSetImpl();
-						Resource resource = resourceSet
-								.createResource(URI
-										.createURI("file://E:/AAEW/test/runtime-EclipseXtext/tt/btstest.essentialocl"));
-
-						return (XtextResource) resource;
-					} catch (Exception e) {
-						return null;
-					}
-				}
-			};
-
-			embeddedEditor = embeddedEditorFactory.newEditor(resourceProvider)
-					.showErrorAndWarningAnnotations().withParent(ownerEditComp);
-			embeddedEditorModelAccess = embeddedEditor.createPartialEditor(
-					"\r", "hallo", "\r", false);
-			// TestPivot tp = new TestPivot();
-			if (selectedCorpusObject != null) {
-				BTSObjectPivot cp = new BTSObjectPivot(
-						selectedCorpusObject);
-				Map<String, EClassifier> map = new HashMap<String, EClassifier>();
-				map.put("second", selectedCorpusObject.eClass());
-				getEditorDocument().setContext(cp.getClassifierForContext(),
-						map);
-			}
-			getEditorDocument().set("self");
-			ownerEditComp.layout();
-		}
+//		{
+//
+//			TabItem ownerstabItem = new TabItem(tabfolder, SWT.NONE);
+//			ownerstabItem.setText("OCL");
+//			EssentialOCLStandaloneSetup.doSetup();
+//
+//			// inititae static access controller
+//			StaticAccessController sa = context
+//					.get(StaticAccessController.class);
+//			EssentialOCLActivator activator = EssentialOCLActivator
+//					.getInstance();
+//			Injector injector = activator
+//					.getInjector(EssentialOCLActivator.ORG_ECLIPSE_OCL_EXAMPLES_XTEXT_ESSENTIALOCL_ESSENTIALOCL);
+//			embeddedEditorFactory = injector
+//					.getInstance(EmbeddedEditorFactory.class);
+//			Composite ownerEditComp = new Composite(tabfolder, SWT.NONE);
+//			ownerEditComp.setLayout(new GridLayout(1, false));
+//			ownerstabItem.setControl(ownerEditComp);
+//			OCLDelegateDomain.initialize(configItem.eResource()
+//					.getResourceSet());
+//			// MetaModelManager mmm =
+//			// mmm.loadResource(configItem.eResource().getURI(), null, null);
+//			IEditedResourceProvider resourceProvider = new IEditedResourceProvider() {
+//
+//				@Override
+//				public XtextResource createResource() {
+//					try {
+//						ResourceSet resourceSet = new ResourceSetImpl();
+//						Resource resource = resourceSet
+//								.createResource(URI
+//										.createURI("file://E:/AAEW/test/runtime-EclipseXtext/tt/btstest.essentialocl"));
+//
+//						return (XtextResource) resource;
+//					} catch (Exception e) {
+//						return null;
+//					}
+//				}
+//			};
+//
+//			embeddedEditor = embeddedEditorFactory.newEditor(resourceProvider)
+//					.showErrorAndWarningAnnotations().withParent(ownerEditComp);
+//			embeddedEditorModelAccess = embeddedEditor.createPartialEditor(
+//					"\r", "hallo", "\r", false);
+//			// TestPivot tp = new TestPivot();
+//			if (selectedCorpusObject != null) {
+//				BTSObjectPivot cp = new BTSObjectPivot(
+//						selectedCorpusObject);
+//				Map<String, EClassifier> map = new HashMap<String, EClassifier>();
+//				map.put("second", selectedCorpusObject.eClass());
+//				getEditorDocument().setContext(cp.getClassifierForContext(),
+//						map);
+//			}
+//			getEditorDocument().set("self");
+//			ownerEditComp.layout();
+//		}
 		tabfolder.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -1247,9 +1269,9 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 		sashForm.layout();
 	}
 
-	public BaseDocument getEditorDocument() {
-		return (BaseDocument) embeddedEditor.getDocument();
-	}
+//	public BaseDocument getEditorDocument() {
+//		return (BaseDocument) embeddedEditor.getDocument();
+//	}
 
 	private DataBindingContext initializeConfigItemEditBindings(
 			BTSConfigItem configItem) {
@@ -1453,7 +1475,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 				
 				@Override
 				public void keyReleased(KeyEvent e) {
-					if (e.keyCode == SWT.CR) {
+					if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 						BTSConfigItem ci = configurationController
 								.createNewConfigItem(newCGroupText_ConfigurationEdit
 										.getText());
@@ -1527,7 +1549,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 				
 				@Override
 				public void keyReleased(KeyEvent e) {
-					if (e.keyCode == SWT.CR) {
+					if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 						BTSConfigItem ci = configurationController
 								.createNewConfigItem(newCIText_ConfigurationEdit
 										.getText());
@@ -1672,7 +1694,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 		lblLabel_1.setText("Label");
 
 		labelText_CIEdit = new TranslationEditorComposite(configItemEditComp,
-				SWT.BORDER, null, null, true);
+				SWT.BORDER, true);
 		labelText_CIEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 2, 1));
 
@@ -1682,7 +1704,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 		lblDescription.setText("Description");
 
 		descText_CIEdit = new TranslationEditorComposite(configItemEditComp,
-				SWT.BORDER, null, null, false);
+				SWT.BORDER, false);
 		descText_CIEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 2, 1));
 
@@ -1758,8 +1780,6 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 				{
 					ci.getOwnerReferencedTypesStringList().add(s);
 				}
-				ci.setType(((BTSConfigItem) selectedConfig).getType());
-				ci.setSubtype(((BTSConfigItem) selectedConfig).getSubtype());
 				CompoundCommand compoundCommand = new CompoundCommand();
 				org.eclipse.emf.common.command.Command command = AddCommand
 						.create(getEditingDomain(selectedConfig),
@@ -1777,7 +1797,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 			
 			@Override
 			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CR) {
+				if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 					BTSConfigItem ci = configurationController
 							.createNewConfigItem(newCIText_ConfigurationEdit
 									.getText());
@@ -2429,7 +2449,7 @@ public class BTSConfigurationDialog extends TitleAreaDialog {
 			
 			@Override
 			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CR) {
+				if (e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR) {
 					BTSConfigItem ci = configurationController
 							.createNewConfigItem(newCIText_ConfigurationEdit
 									.getText());

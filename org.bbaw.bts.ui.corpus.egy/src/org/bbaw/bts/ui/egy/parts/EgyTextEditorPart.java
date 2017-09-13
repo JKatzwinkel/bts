@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 
@@ -65,6 +66,8 @@ import org.bbaw.bts.btsviewmodel.StatusMessage;
 import org.bbaw.bts.commons.BTSConstants;
 import org.bbaw.bts.commons.BTSPluginIDs;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
+import org.bbaw.bts.core.commons.corpus.BTSCorpusConstants;
+import org.bbaw.bts.core.commons.corpus.CorpusUtils;
 import org.bbaw.bts.core.commons.staticAccess.StaticAccessController;
 import org.bbaw.bts.core.controller.generalController.EditingDomainController;
 import org.bbaw.bts.core.controller.generalController.PermissionsAndExpressionsEvaluationController;
@@ -85,6 +88,7 @@ import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelPackage;
 import org.bbaw.bts.corpus.text.egy.egyDsl.TextContent;
 import org.bbaw.bts.corpus.text.egy.ui.custom.BTSE4ToGuiceXtextSourceViewerProvider;
 import org.bbaw.bts.searchModel.BTSModelUpdateNotification;
+import org.bbaw.bts.ui.commons.corpus.events.BTSRelatingObjectsFilterEvent;
 import org.bbaw.bts.ui.commons.corpus.events.BTSRelatingObjectsLoadingEvent;
 import org.bbaw.bts.ui.commons.corpus.events.BTSTextSelectionEvent;
 import org.bbaw.bts.ui.commons.corpus.interfaces.IBTSEditor;
@@ -97,6 +101,7 @@ import org.bbaw.bts.ui.commons.corpus.text.BTSSubtextAnnotation;
 import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
 import org.bbaw.bts.ui.commons.utils.BTSUIConstants;
 import org.bbaw.bts.ui.commons.widgets.TranslationEditorComposite;
+import org.bbaw.bts.ui.corpus.util.AnnotationToolbarItemCreator;
 import org.bbaw.bts.ui.egy.parts.egyTextEditor.BTSTextXtextEditedResourceProvider;
 import org.bbaw.bts.ui.egy.parts.egyTextEditor.EgyLineNumberRulerColumn;
 import org.bbaw.bts.ui.egy.parts.support.AbstractTextEditorLogic;
@@ -105,6 +110,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -164,6 +170,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TypedEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -175,7 +182,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.ui.editor.XtextSourceViewer;
-import org.eclipse.xtext.ui.editor.embedded.EmbeddedEditor;
 import org.eclipse.xtext.ui.editor.embedded.EmbeddedEditorFactory;
 import org.eclipse.xtext.ui.editor.embedded.EmbeddedEditorModelAccess;
 import org.eclipse.xtext.ui.editor.model.IXtextDocument;
@@ -183,6 +189,8 @@ import org.eclipse.xtext.util.concurrent.IUnitOfWork;
 import org.eclipse.xtext.validation.Issue;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+import org.osgi.service.prefs.BackingStoreException;
+import org.osgi.service.prefs.Preferences;
 
 import com.google.inject.Injector;
 
@@ -193,9 +201,6 @@ import com.google.inject.Injector;
  * @author Christoph Plutte
  */
 public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEditor, EventHandler {
-
-
-	
 
 	/** The dirty. */
 	@Optional
@@ -281,10 +286,6 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 	/** The xtext resource provider. */
 	private BTSTextXtextEditedResourceProvider xtextResourceProvider = new BTSTextXtextEditedResourceProvider();
 
-	/** The embedded editor. */
-	@SuppressWarnings("restriction")
-	private EmbeddedEditor embeddedEditor;
-
 	/** The embedded editor comp. */
 	private Composite embeddedEditorComp;
 
@@ -294,9 +295,6 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 	/** The embedded editor parent comp. */
 	private Composite embeddedEditorParentComp;
-
-	/** The painter. */
-	private AnnotationPainter painter;
 
 	/** The ruler. */
 	private CompositeRuler ruler;
@@ -353,7 +351,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 			4);
 	
 	/** The relating objects annotation map. */
-	private Map<EObject, List<BTSModelAnnotation>> relatingObjectsAnnotationMap;
+	private Map<EObject, List<BTSModelAnnotation>> relatingObjectsAnnotationMap = new HashMap<EObject, List<BTSModelAnnotation>>();
 	
 	/** The query id. */
 	protected String queryId;
@@ -414,7 +412,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 	private Job delaySelectionJob;
 
-	
+
 	/**
 	 * Instantiates a new egy text editor part.
 	 *
@@ -450,11 +448,11 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 		((GridLayout) parent.getLayout()).marginWidth = 0;
 		contextService
 				.activateContext("org.eclipse.ui.contexts.dialogAndWindow");
-		// eventBroker.subscribe("event_text_selection/*", this);
-		// eventBroker.subscribe("event_relating_objects/*", this);
-
-		System.out.println("EgyEditor postconstruct");
-
+		
+		// load annotatin styling settings node
+		AnnotationToolbarItemCreator.processAndUpateToolbarItemsAnnotationShortcut(part, 
+				getAnnotationPreferences());
+		
 		SashForm sashForm = new SashForm(parent, SWT.VERTICAL);
 		sashForm.setLayoutData(new GridData(GridData.FILL_BOTH));
 		Composite composite = new Composite(sashForm, SWT.NONE);
@@ -603,11 +601,6 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 					context.get(StaticAccessController.class);
 					
-					// TODO old working
-//					EgyDslActivator activator = EgyDslActivator.getInstance();
-//					injector = activator
-//							.getInjector(EgyDslActivator.ORG_BBAW_BTS_CORPUS_TEXT_EGY_EGYDSL);
-					
 					// new trial
 					injector = textEditorController.findEgyDslInjector();
 					
@@ -616,13 +609,11 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 					embeddedEditor = embeddedEditorFactory
 							.newEditor(xtextResourceProvider)
-							.showAnnotations(BTSAnnotationAnnotation.TYPE,
-									BTSCommentAnnotation.TYPE,
+							.showAnnotations(
 									"org.eclipse.xtext.ui.editor.error",
-									"org.eclipse.xtext.ui.editor.warning",
-									BTSSentenceAnnotation.TYPE_HIGHLIGHTED)
+									"org.eclipse.xtext.ui.editor.warning")
 							.withParent(embeddedEditorComp);
-					
+
 					embeddedEditorModelAccess = embeddedEditor
 							.createPartialEditor("", "§§", "", false);
 					embeddedEditor.getViewer().getTextWidget()
@@ -650,12 +641,24 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 					};
 					painter = new AnnotationPainter(embeddedEditor.getViewer(),
 							annotationAccess);
-					configureEditorDrawingStrategies(painter);
+					
+					ruler = EmbeddedEditorFactory.getCpAnnotationRuler();
+					oruler = EmbeddedEditorFactory.getOverViewRuler();
+					
+					
+					configureEditorDrawingStrategies(oruler);
+					if (show_line_number_ruler)
+					{
+						lineNumberRulerColumn = new EgyLineNumberRulerColumn(LINE_SPACE);
+						//lineNumberRulerColumn.setModel(annotationModel); // does nothing
+						embeddedEditor.getViewer()
+								.addVerticalRulerColumn(lineNumberRulerColumn);
+					}
+					
 					embeddedEditor.getViewer().addTextPresentationListener(painter);
 					embeddedEditor.getViewer().addPainter(painter);
 					
 					embeddedEditorParentComp.layout();
-					configureEditorRuler();
 
 					context.set(XtextSourceViewer.class, embeddedEditor.getViewer());
 					BTSE4ToGuiceXtextSourceViewerProvider.setContext(context);
@@ -793,7 +796,6 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 					child.set(IBTSEditor.class, EgyTextEditorPart.this);
 					signTextEditor = ContextInjectionFactory.make(
 							SignTextComposite.class, child);
-					signTextEditor.setEventBroker(eventBroker);
 					plainTextComp.layout();
 					plainTextComp.pack();
 				}
@@ -863,7 +865,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 		sentenceTranslateComp.setText("Sentence Translation");
 		sentenceTranslate_Editor = new TranslationEditorComposite(
 				sentenceTranslateComp, SWT.WRAP | SWT.MULTI | SWT.V_SCROLL
-						| SWT.BORDER, null, null, false);
+						| SWT.BORDER, null, null, false, true);
 		sentenceTranslate_Editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
 				true, true));
 		sentenceTranslateComp.layout();
@@ -929,6 +931,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 								{
 									index = index + 1;
 									targetSentence.getSentenceItems().add(index, copiedItem);
+									dirty.setDirty(true);
 								}
 							}
 						}
@@ -950,6 +953,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 								{
 									index = index + 1;
 									targetSentence.getSentenceItems().add(index, copiedItem);
+									dirty.setDirty(true);
 								}
 							}
 						}
@@ -975,6 +979,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 								{
 									index = index + 1;
 									targettextcontent.getTextItems().add(index, copiedItem);
+									dirty.setDirty(true);
 								}
 							}
 						}
@@ -995,6 +1000,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 							{
 								index = index + 1;
 								targettextcontent.getTextItems().add(index, copiedItem);
+								dirty.setDirty(true);
 							}
 						}
 					}
@@ -1052,57 +1058,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 		return textEditorController.copySentenceItem(copyItem);
 	}
 
-	/**
-	 * Configure editor ruler.
-	 */
-	private void configureEditorRuler() {
-		ruler = EmbeddedEditorFactory.getCpAnnotationRuler();
-
-		oruler = EmbeddedEditorFactory.getOverViewRuler();
-		oruler.addAnnotationType(BTSAnnotationAnnotation.TYPE);
-		oruler.setAnnotationTypeLayer(BTSAnnotationAnnotation.TYPE, 3);
-		oruler.setAnnotationTypeColor(BTSAnnotationAnnotation.TYPE,
-				BTSUIConstants.COLOR_ANNOTATTION);
-		oruler.addAnnotationType(BTSAnnotationAnnotation.TYPE_HIGHLIGHTED);
-		oruler.setAnnotationTypeLayer(BTSAnnotationAnnotation.TYPE_HIGHLIGHTED, 5);
-		oruler.setAnnotationTypeColor(BTSAnnotationAnnotation.TYPE_HIGHLIGHTED,
-				BTSUIConstants.COLOR_ANNOTATTION);
-		oruler.addAnnotationType(BTSAnnotationAnnotation.TYPE_RUBRUM);
-		oruler.setAnnotationTypeLayer(BTSAnnotationAnnotation.TYPE_RUBRUM, 3);
-		oruler.setAnnotationTypeColor(BTSAnnotationAnnotation.TYPE_RUBRUM,
-				BTSUIConstants.COLOR_RUBRUM);
-
-		oruler.addAnnotationType(BTSCommentAnnotation.TYPE);
-		oruler.setAnnotationTypeLayer(BTSCommentAnnotation.TYPE, 2);
-		oruler.setAnnotationTypeColor(BTSCommentAnnotation.TYPE,
-				BTSUIConstants.COLOR_COMMENT);
-		
-		oruler.addAnnotationType(BTSCommentAnnotation.TYPE_HIGHLIGHTED);
-		oruler.setAnnotationTypeLayer(BTSCommentAnnotation.TYPE_HIGHLIGHTED, 4);
-		oruler.setAnnotationTypeColor(BTSCommentAnnotation.TYPE_HIGHLIGHTED,
-				BTSUIConstants.COLOR_COMMENT);
-
-		oruler.addAnnotationType("org.eclipse.xtext.ui.editor.error");
-		oruler.setAnnotationTypeLayer("org.eclipse.xtext.ui.editor.error", 30);
-		oruler.setAnnotationTypeColor("org.eclipse.xtext.ui.editor.error", BTSUIConstants.COLOR_ERROR);
-
-		oruler.addAnnotationType("org.eclipse.xtext.ui.editor.warning");
-		oruler.setAnnotationTypeLayer("org.eclipse.xtext.ui.editor.warning", 10);
-		oruler.setAnnotationTypeColor("org.eclipse.xtext.ui.editor.warning",BTSUIConstants.COLOR_WARNING);
-		
-		oruler.addAnnotationType(BTSSentenceAnnotation.TYPE_HIGHLIGHTED);
-		oruler.setAnnotationTypeLayer(BTSSentenceAnnotation.TYPE_HIGHLIGHTED, 8);
-		oruler.setAnnotationTypeColor(BTSSentenceAnnotation.TYPE_HIGHLIGHTED,
-				BTSUIConstants.COLOR_SENTENCE);
-
-		if (show_line_number_ruler)
-		{
-			lineNumberRulerColumn = new EgyLineNumberRulerColumn(LINE_SPACE);
-			//lineNumberRulerColumn.setModel(annotationModel); // does nothing
-			embeddedEditor.getViewer()
-					.addVerticalRulerColumn(lineNumberRulerColumn);
-		}
-	}
+	
 
 	/**
 	 * Update model from sign text.
@@ -1795,27 +1751,22 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 			for (BTSModelAnnotation a : list) {
 				
 				// add selected Items
-				textItems.add(((BTSModelAnnotation) a)
-						.getModel());
+				textItems.add(a.getModel());
 				
 				// calculate start and end
-				if (((BTSModelAnnotation) a).getModel() instanceof BTSSentenceItem) 
+				if (a.getModel() instanceof BTSSentenceItem) 
 					if  (!a.getClass().getSuperclass().equals(BTSModelAnnotation.class) 
 							|| a instanceof BTSLemmaAnnotation) {
 						Position pos = embeddedEditor.getViewer().getAnnotationModel()
 								.getPosition(a);
-						BTSSentenceItem item = (BTSSentenceItem) ((BTSModelAnnotation) a)
-								.getModel();
+						BTSSentenceItem item = (BTSSentenceItem) a.getModel();
 
 						if (startItem == null
-								// move selection offset to right if within an Ambivalence
-								|| (item.eContainer() instanceof BTSLemmaCase)) {
+								&& !(item instanceof BTSAmbivalence)) {
 							startItem = item;
 						}
 						if (endItem == null
-								// move selection end to right if not within an Ambivalence
-								|| (!(item instanceof BTSAmbivalence) && pos.getOffset() + pos.getLength() > endItemOffeset)
-								|| (item.eContainer() instanceof BTSLemmaCase)) {
+								|| (!(item instanceof BTSAmbivalence) && pos.getOffset() + pos.getLength() > endItemOffeset)) {
 							endItem = item;
 							endItemOffeset = pos.getOffset() + pos.getLength();
 						}
@@ -2075,7 +2026,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 							part.setLabel(btsObject.getName());
 						}
 						makePartActive(true);
-						bringPartToFront(true);
+//						bringPartToFront(true);
 						loadInput((BTSCorpusObject) selection);
 						editingDomain = editingDomainController
 								.getEditingDomain(text);
@@ -2097,8 +2048,6 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 				{
 					text = (BTSText) selection;
 					selectionCached = true;
-				}
-				if ((selection instanceof BTSText)) {
 				}
 
 				selectedTextItem = selection;
@@ -2298,6 +2247,8 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 					sync.asyncExec(new Runnable() {
 						public void run() {
 							// TODO this can be improved in order to reduce work load repainting large texts
+							
+							if (painter == null || embeddedEditor.getViewer().getTextWidget().isDisposed()) return;
 							painter.modelChanged(ev);
 							painter.paint(IPainter.INTERNAL);
 							ruler.update();
@@ -2361,6 +2312,9 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 	 */
 	private void loadInput(BTSCorpusObject o) {
 		setSentenceTranslationActive(false);
+		// wipe latest text selection event in order to avoid leak
+		this.btsTextEvent = new BTSTextSelectionEvent(new TypedEvent(this), o);
+		selectionService.setSelection(btsTextEvent);
 
 		if (tabFolder != null && o instanceof BTSText) {
 
@@ -2405,26 +2359,23 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 								}
 							});
 							
-							if (relatingObjects != null
-									&& !relatingObjects.isEmpty()) {
-								Job job = new Job("post_relating_objects")
-								{
+							Job job = new Job("post_relating_objects")
+							{
 
-									@Override
-									protected IStatus run(IProgressMonitor monitor) {
-										BTSRelatingObjectsLoadingEvent event = new BTSRelatingObjectsLoadingEvent(
-												text);
-										event.setRelatingObjects(relatingObjects);
-										eventBroker
-												.post(BTSUIConstants.EVENT_TEXT_RELATING_OBJECTS_LOADED,
-														event);
-										return Status.OK_STATUS;
-									}
-									
-								};
-								job.schedule(1000);
+								@Override
+								protected IStatus run(IProgressMonitor monitor) {
+									BTSRelatingObjectsLoadingEvent event = new BTSRelatingObjectsLoadingEvent(
+											text);
+									event.setRelatingObjects(relatingObjects);
+									eventBroker
+											.post(BTSUIConstants.EVENT_TEXT_RELATING_OBJECTS_LOADED,
+													event);
+									return Status.OK_STATUS;
+								}
 								
-							}
+							};
+							job.schedule(1000);
+								
 						}
 					};
 					new ProgressMonitorDialog(new Shell()).run(true, true, op);
@@ -2519,7 +2470,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 		selectedSentence = null;
 		cachedCursor = 0;
 		modelAnnotationMap = new HashMap<String, BTSModelAnnotation>();
-		relatingObjectsAnnotationMap = new HashMap<EObject, List<BTSModelAnnotation>>();
+		relatingObjectsAnnotationMap.clear();
 		localCommandCacheSet.clear();
 		if (editingDomain != null) {
 			// remove commandstacklistener from old selection
@@ -2771,11 +2722,32 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 	
 	@Inject
 	@Optional
+	void eventReceivedUpdates(
+			@EventTopic("event_preferences_changed/*") String preferencePath) {
+		if (preferencePath != null && preferencePath.endsWith(BTSCorpusConstants.PREF_ANNOTATION_SETTINGS)) {
+			
+			sync.asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					AnnotationToolbarItemCreator.processAndUpateToolbarItemsAnnotationShortcut(part, 
+							getAnnotationPreferences());
+					configureEditorDrawingStrategies(oruler);
+
+				}
+			});
+			
+		}
+	}
+	
+	@Inject
+	@Optional
 	void eventReceivedTextRequested(
 			@UIEventTopic(BTSUIConstants.EVENT_EGY_TEXT_EDITOR_INPUT_REQUESTED+"translation_part") final BTSText current) {
-		if (current == null || !current.equals(text)) 
-			if (text != null)
-				selectionService.setSelection(text);
+		if (current == null || !current.equals(text)) {
+			if (text != null) {
+				eventBroker.post(BTSUIConstants.EVENT_EGY_TEXT_EDITOR_INPUT_REQUESTED+"response", text);
+			}
+		}
 	}
 
 	@Inject
@@ -2790,10 +2762,109 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 				eventBroker
 						.post(BTSUIConstants.EVENT_TEXT_RELATING_OBJECTS_LOADED,
 								event);
+			} 
+	}
+	
+	@Inject
+	@Optional
+	void eventReceivedRelatedObjectsFilterSet(
+			@UIEventTopic("event_anno_filters/*") final BTSRelatingObjectsFilterEvent event) {
+		if (event != null) {
+			Map<String, Boolean> filters = event.getFilters();
+			//painter.removeAllAnnotationTypes();
+			for (Entry<String, Boolean> e : filters.entrySet()) {
+				String typeId = e.getKey();
+				String strategyId = null;
+				if (getAnnotationStrategySet().contains(typeId))
+				{
+					strategyId = typeId;
+				}
+				else{
+					if (typeId.startsWith(BTSConstants.COMMENT))
+					{
+						strategyId = BTSConstants.COMMENT;
+					}else if (typeId.startsWith(CorpusUtils.SUBTEXT_TYPE))
+					{
+						strategyId = CorpusUtils.SUBTEXT_TYPE;
+					}else if (typeId.startsWith(BTSConstants.ANNOTATION + "." +CorpusUtils.ANNOTATION_RUBRUM_TYPE))
+					{
+						strategyId = BTSConstants.ANNOTATION + "." +CorpusUtils.ANNOTATION_RUBRUM_TYPE;
+					}else if (typeId.startsWith(BTSConstants.ANNOTATION))
+					{
+						strategyId = BTSConstants.ANNOTATION;
+					}
+					else
+					{
+						strategyId = BTSConstants.ANNOTATION;
+					}
+				}
+				// update editor painter and ruler annotation types
+				for (String suffix : ANNO_TYPES_SUFFIXES) {
+					if (e.getValue()) {
+						painter.addAnnotationType(typeId+suffix,
+								strategyId+suffix);
+						
+						painter.setAnnotationTypeColor(typeId +suffix, getBackgroundColorTypePath(strategyId));
+						oruler.addAnnotationType(typeId+suffix);
+					} else {
+						painter.removeAnnotationType(typeId+suffix);
+						oruler.removeAnnotationType(typeId+suffix);
+					}
+				}
+				painter.paint(IPainter.INTERNAL);
 			}
+		}
 	}
 
-
+	/**
+	 * @param fig
+	 * @param object
+	 */
+	private Color getBackgroundColorTypePath(String typePath) {
+		// read values from the instance scope
+		String colorString = null;
+		try {
+			for (String childNode : getAnnotationPreferences().childrenNames())
+			{
+				Preferences typeNode = getAnnotationPreferences().node(childNode);
+				String settingsTypePath = AnnotationToolbarItemCreator.getAnnotationTypePath((IEclipsePreferences) typeNode);
+				if (settingsTypePath.equals(typePath)) {
+					colorString = typeNode.get(BTSCorpusConstants.PREF_COLOR, null);
+					break;
+				}
+			}
+		} catch (BackingStoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Color color = null;
+		if (colorString != null)
+		{
+			color = BTSUIConstants.getColor(colorString);
+		}
+		else
+		{
+			if (typePath.startsWith(BTSConstants.COMMENT))
+			{
+				color = BTSUIConstants.COLOR_COMMENT;
+			}else if (typePath.startsWith(BTSConstants.TEXT))
+			{
+				color = BTSUIConstants.COLOR_SUBTEXT;
+			}else if (typePath.startsWith(BTSConstants.ANNOTATION + "." +CorpusUtils.ANNOTATION_RUBRUM_TYPE))
+			{
+				color = BTSUIConstants.COLOR_RUBRUM;
+			}else if (typePath.startsWith(BTSConstants.ANNOTATION))
+			{
+				color = BTSUIConstants.COLOR_ANNOTATTION;
+			}
+			else
+			{
+				color = BTSUIConstants.COLOR_ANNOTATTION;
+			}
+		}
+		return color;
+		
+	}
 	/**
 	 * Event received load lemmata.
 	 *
@@ -2803,8 +2874,8 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 	@Optional
 	void eventReceivedLoadLemmata(
 			@EventTopic("event_egy_text_editor_load_lemmata/*") Object o) {
-		logger.info("EgyTextEditorPart eventReceived "
-				+ BTSUIConstants.EVENT_EGY_TEXT_EDITOR_LOAD_LEMMATA);
+		//logger.info("EgyTextEditorPart eventReceived "
+		//		+ BTSUIConstants.EVENT_EGY_TEXT_EDITOR_LOAD_LEMMATA);
 		sync.asyncExec(new Runnable() {
 			public void run() {
 				cachedCursor = embeddedEditor.getViewer().getTextWidget()
@@ -2932,7 +3003,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 			// relObject ist neu
 			for (BTSRelation rel : object.getRelations()) {
-				if (rel.getObjectId() != null
+				if (rel.getObjectId() != null && text != null
 						&& rel.getObjectId().equals(text.get_id())) {
 					for (BTSInterTextReference ref : rel.getParts()) {
 						int offset = 0;
@@ -2991,7 +3062,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 					&& ((BTSAnnotation) object).getType().equalsIgnoreCase(
 							"rubrum")) {
 				ta = new BTSAnnotationAnnotation(embeddedEditor.getDocument(),
-						BTSAnnotationAnnotation.TYPE_RUBRUM, issue, object,
+						issue, object,
 						(BTSAnnotation) object);
 				ta.setInterTextReference(ref);
 				addToRelatingObjectAnnotationMap(object, ta);
@@ -2999,14 +3070,14 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 			else
 			{
 			ta = new BTSAnnotationAnnotation(embeddedEditor.getDocument(),
-					BTSAnnotationAnnotation.TYPE, issue, object,
+					issue, object,
 					(BTSAnnotation) object);
 			ta.setInterTextReference(ref);
 			addToRelatingObjectAnnotationMap(object, ta);
 			}
 
 		} else if (object instanceof BTSComment) {
-			ta = new BTSCommentAnnotation(BTSCommentAnnotation.TYPE, embeddedEditor.getDocument(), issue,
+			ta = new BTSCommentAnnotation(embeddedEditor.getDocument(), issue,
 					object, (BTSComment) object);
 			ta.setInterTextReference(ref);
 
@@ -3015,7 +3086,7 @@ public class EgyTextEditorPart extends AbstractTextEditorLogic implements IBTSEd
 
 		} else if (object instanceof BTSText) {
 			if (((BTSText) object).getType().equalsIgnoreCase("subtext")) {
-				ta = new BTSSubtextAnnotation(BTSSubtextAnnotation.TYPE, embeddedEditor.getDocument(), issue,
+				ta = new BTSSubtextAnnotation(embeddedEditor.getDocument(), issue,
 						object, (BTSText) object);
 				ta.setInterTextReference(ref);
 				addToRelatingObjectAnnotationMap(object, ta);
