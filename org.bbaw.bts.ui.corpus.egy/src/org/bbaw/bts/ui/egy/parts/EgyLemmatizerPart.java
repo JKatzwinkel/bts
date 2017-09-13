@@ -1244,14 +1244,17 @@ public class EgyLemmatizerPart implements SearchViewer {
 			searchjob = null;
 		}
 
-		if (query.getType() != BTSQueryType.LEMMA)
+		if (query.getType() != BTSQueryType.LEMMA) {
 			if (!query.isIdQuery() 
-					&& query.getAutocompletePrefix() != null)
-				if (!query.isWildcardQuery())
+					&& query.getAutocompletePrefix() != null) {
+				if (!query.isWildcardQuery()) {
 					if (query.getRequestFields().size() == 1 && query.getRequestFields().contains("name")) {
 						searchAuto(query.getSearchString().replaceAll("\\.", ","));
 						return;
 					}
+				}
+			}
+		}
 
 		// fill lemmaViewer
 		searchjob = new Job("load input") {
@@ -1278,7 +1281,6 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 				// remove those lemma entries that are obsolete or of root type
 				// sort entries using EgyLemmaEntryComparator and processWordChar(searchString) [not anymore]
-				// limit results to 500
 				List<BTSLemmaEntry> filtered = sortAndfilterLemmaProposals(obs, searchString, -1);
 				System.out.println("Load results: "+filtered.size());
 
