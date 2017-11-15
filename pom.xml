@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.bbaw.bts</groupId>
 	<artifactId>aaew-bts</artifactId>
-	<version>3.1.0</version>
+	<version>3.1.1</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -51,6 +51,7 @@
 		<module>org.bbaw.bts.ui.main</module>
 		<module>org.bbaw.bts.ui.resources</module>
 		<module>org.bbaw.bts.ui.resources.impl</module>
+		<module>org.lightcouch</module>
 		<module>org.eclipselabs.emfjson</module>
 		<module>org.eclipselabs.emfjson.feature</module>
 		<module>org.eclipselabs.emfjson.couchdb</module>
@@ -59,6 +60,10 @@
 		<module>org.eclipse.e4.ui.workbench.perspectiveswitcher</module>
 		<module>org.ramo.klevis.p2.core.service</module>
 		<module>org.bbaw.bts.app.product</module>
+		
+		<!-- optional: text annotations extension -->
+		<module>org.fuberlin.bts.ui.corpus.egy.annotations</module>
+		
 	</modules>
 
 	<properties>
@@ -73,13 +78,13 @@
 			<name>BTS BUILD Rep</name>
 			<url>http://telota.bbaw.de/bts-update/bts-build-neon</url>
 			<layout>p2</layout>
-		</repository>
-		<repository>
+		</repository> 
+		<!-- <repository>
 			<id>bts-mvn-build-extras</id>
 			<name>BTS BUILD Rep</name>
 			<url>http://telota.bbaw.de/bts-update/extras</url>
 			<layout>p2</layout>
-		</repository>
+		</repository> -->
 		<repository>
 			<id>neon</id>
 			<url>http://download.eclipse.org/releases/neon</url>
@@ -112,6 +117,7 @@
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho.version}</version>
 				<configuration>
 					<environments>
 						<!--
@@ -135,6 +141,13 @@
 							<ws>win32</ws>
 							<arch>x86_64</arch>
 						</environment>
+						
+						<environment>
+							<os>macosx</os>
+							<ws>cocoa</ws>
+							<arch>x86_64</arch>
+						</environment>
+						
 					</environments>
 				</configuration>
 			</plugin>
