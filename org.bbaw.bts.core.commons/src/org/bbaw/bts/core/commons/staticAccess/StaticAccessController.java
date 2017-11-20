@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -66,7 +67,8 @@ public class StaticAccessController {
 	private static IEclipseContext context;
 
 	/** The preference store. */
-	private static IEclipsePreferences preferenceStore = ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app");
+	private static IEclipsePreferences preferenceStore = DefaultScope.INSTANCE.getNode("org.bbaw.bts.app");
+
 	@Inject
 	@Named("org.bbaw.bts.ui.resources.BTSResourceProvider")
 	private static Object resourceProvider;
@@ -143,8 +145,8 @@ public class StaticAccessController {
 	 *
 	 * @return the preference store
 	 */
-	public static Object getPreferenceStore() {
-		return null;
+	public static IEclipsePreferences getPreferenceStore() {
+		return preferenceStore;
 	}
 
 

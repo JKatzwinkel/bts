@@ -37,6 +37,7 @@ import org.bbaw.bts.btsmodel.BtsmodelFactory;
 import org.bbaw.bts.btsmodel.BtsmodelPackage;
 import org.bbaw.bts.core.commons.staticAccess.StaticAccessController;
 import org.bbaw.bts.core.controller.generalController.BTSConfigurationController;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -56,6 +57,8 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 {
 	private BTSConfigurationController configurationController = StaticAccessController
 			.getContext().get(BTSConfigurationController.class);
+
+	private IEclipsePreferences preferences = StaticAccessController.getPreferenceStore();
 	/**
 	 * This constructs an instance from a factory and a notifier. <!--
 	 * begin-user-doc --> <!-- end-user-doc -->
@@ -534,6 +537,7 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 				(BtsmodelPackage.Literals.BTS_OBJECT__EXTERNAL_REFERENCES,
 				 BtsmodelFactory.eINSTANCE.createBTSExternalReference()));
 	}
+
 	protected BTSConfigurationController getConfigurationController()
 	{
 		if (configurationController == null)
@@ -542,5 +546,9 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 					.getContext().get(BTSConfigurationController.class);
 		}
 		return configurationController;
+	}
+
+	protected IEclipsePreferences getPreferencesStore() {
+		return preferences;
 	}
 }

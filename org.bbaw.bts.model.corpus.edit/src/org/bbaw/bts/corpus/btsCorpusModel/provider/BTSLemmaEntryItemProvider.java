@@ -37,6 +37,9 @@ import org.bbaw.bts.corpus.btsCorpusModel.BTSCorpusObject;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSLemmaEntry;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelFactory;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelPackage;
+import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -222,15 +225,17 @@ Display
 	
 
 	private String getTranslationString(Object object) {
+		
+		String lang = getPreferencesStore().get(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, "org.bbaw.bts.ui.corpus.egy");
 		String translation = "";
 		if (object instanceof BTSLemmaEntry)
 		{
 			BTSLemmaEntry lemma = (BTSLemmaEntry) object;
 			if (lemma.getTranslations() == null) return translation;
-			translation = lemma.getTranslations().getTranslation("de");
+			translation = lemma.getTranslations().getTranslation(lang);
 			if ("".equals(translation))
 			{
-				translation = lemma.getTranslations().getTranslation("en");
+				translation = lemma.getTranslations().getTranslation("de");
 			}
 		}
 		return translation;
