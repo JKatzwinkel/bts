@@ -132,7 +132,7 @@ Display
 		} else {
 			styledLabel.append(label, StyledString.Style.QUALIFIER_STYLER);
 		}
-		styledLabel.append(" [" + ((BTSThsEntry)object).getProject() + "]", GREY);
+		styledLabel.append(" [" + ((BTSThsEntry)object).getProject() + "]", TEXT_STYLE_GREY);
 		return styledLabel;
 	}
 

@@ -465,7 +465,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 		lemmaViewer = new TreeViewer(lemma_composite, SWT.BORDER | SWT.V_SCROLL);
 
-		final AdapterFactoryLabelProvider.StyledLabelProvider labelProvider = new AdapterFactoryLabelProvider.StyledLabelProvider(
+		AdapterFactoryLabelProvider.StyledLabelProvider labelProvider = new AdapterFactoryLabelProvider.StyledLabelProvider(
 				factory, lemmaViewer);
 		AdapterFactoryContentProvider contentProvider = new AdapterFactoryContentProvider(
 				factory);
@@ -504,7 +504,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 		//
 
 		lemmaViewer.setContentProvider(contentProvider);
-		lemmaViewer.setLabelProvider(labelProvider);
+		lemmaViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(labelProvider));
 		sorter = ContextInjectionFactory.make(
 				BTSLemmatizerEgyObjectByNameViewerSorter.class, context);
 		//lemmaViewer.setComparator(sorter); //XXX seems unstable

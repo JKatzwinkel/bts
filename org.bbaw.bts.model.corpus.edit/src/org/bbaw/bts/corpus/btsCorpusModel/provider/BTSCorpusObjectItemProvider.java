@@ -71,13 +71,6 @@ public class BTSCorpusObjectItemProvider
 		}
 	};
 	
-	protected Style GREY = StyledString.Style.newBuilder()
-			.setForegroundColor(URI.createURI("color://rgb/200/197/185"))
-			.toStyle();
-	
-	protected Style UNDERLINED = StyledString.Style.newBuilder()
-			.setUnderlineColor(URI.createURI("color://rgb/0/0/0"))
-			.toStyle();
 	
 	
 	
@@ -208,7 +201,7 @@ public class BTSCorpusObjectItemProvider
 		} else {
 			styledLabel.append(label, StyledString.Style.QUALIFIER_STYLER);
 		}
-		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() + "\\" +  ((BTSCorpusObject)object).getCorpusPrefix() + "]", GREY);
+		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() + "\\" +  ((BTSCorpusObject)object).getCorpusPrefix() + "]", TEXT_STYLE_GREY);
 
 		return styledLabel;
 	}

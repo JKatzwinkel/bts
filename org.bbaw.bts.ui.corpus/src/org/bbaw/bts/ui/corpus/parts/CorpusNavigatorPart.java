@@ -314,8 +314,7 @@ public class CorpusNavigatorPart extends NavigatorPart implements ScatteredCachi
 				factory);
 
 		treeViewer.setContentProvider(contentProvider);
-		treeViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(
-labelProvider));
+		treeViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(labelProvider));
 
 		treeViewer.setUseHashlookup(true);
 		selectionListener = new ISelectionChangedListener() {

@@ -56,8 +56,8 @@ import org.eclipse.swt.widgets.Display;
  * <!-- end-user-doc -->
  * @generated
  */
-public class BTSLemmaEntryItemProvider
-	extends BTSCorpusObjectItemProvider {
+public class BTSLemmaEntryItemProvider extends BTSCorpusObjectItemProvider {
+
 	/**
 	 * This constructs an instance from a factory and a notifier.
 	 * <!-- begin-user-doc -->
@@ -146,10 +146,8 @@ public class BTSLemmaEntryItemProvider
 	@Override
 	public Object getImage(Object object)
 	{
-		return overlayImage(object, getBTSResourceProvider().getImage(
-Display
-				.getDefault(), getConfigurationController()
-				.getIconStringOfObjectType((BTSCorpusObject) object)));
+		return overlayImage(object, getBTSResourceProvider().getImage(Display.getDefault(), 
+				getConfigurationController().getIconStringOfObjectType((BTSCorpusObject) object)));
 	}
 
 	/**
@@ -217,7 +215,7 @@ Display
 		{
 			styledLabel.append("{" + typeSubtype + "}", StyledString.Style.QUALIFIER_STYLER);
 		}
-		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() +  "]", GREY);
+		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() +  "]", TEXT_STYLE_GREY);
 
 		return styledLabel;
 	}

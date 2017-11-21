@@ -144,7 +144,7 @@ public class BTSAbstractTextItemProvider extends BTSCorpusObjectItemProvider {
 		}
 		styledLabel.append(" [" + ((BTSCorpusObject) object).getProject()
 				+ "\\" + ((BTSCorpusObject) object).getCorpusPrefix() + "]",
-				GREY);
+				TEXT_STYLE_GREY);
 
 		return styledLabel;
 	}

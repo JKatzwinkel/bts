@@ -118,7 +118,7 @@ public class BTSTCObjectItemProvider
 		} else {
 			styledLabel.append(label, StyledString.Style.QUALIFIER_STYLER);
 		}
-		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() + "\\" +  ((BTSCorpusObject)object).getCorpusPrefix() + "]", GREY);
+		styledLabel.append(" [" + ((BTSCorpusObject)object).getProject() + "\\" +  ((BTSCorpusObject)object).getCorpusPrefix() + "]", TEXT_STYLE_GREY);
 
 		return styledLabel;
 	}

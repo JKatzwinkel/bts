@@ -118,7 +118,7 @@ Display
 		} else {
 			styledLabel.append(label, StyledString.Style.QUALIFIER_STYLER);
 		}
-		styledLabel.append(" [" + ((BTSAnnotation)object).getProject() + "\\" +  ((BTSAnnotation)object).getCorpusPrefix() + "]", GREY);
+		styledLabel.append(" [" + ((BTSAnnotation)object).getProject() + "\\" +  ((BTSAnnotation)object).getCorpusPrefix() + "]", TEXT_STYLE_GREY);
 
 		return styledLabel;
 	}

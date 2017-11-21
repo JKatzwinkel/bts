@@ -40,12 +40,14 @@ import org.bbaw.bts.core.controller.generalController.BTSConfigurationController
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.edit.provider.ComposeableAdapterFactory;
 import org.eclipse.emf.edit.provider.IItemPropertyDescriptor;
 import org.eclipse.emf.edit.provider.ItemPropertyDescriptor;
 import org.eclipse.emf.edit.provider.StyledString;
 import org.eclipse.emf.edit.provider.ViewerNotification;
+import org.eclipse.emf.edit.provider.StyledString.Style;
 
 /**
  * This is the item provider adapter for a {@link org.bbaw.bts.btsmodel.BTSObject} object.
@@ -58,7 +60,20 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 	private BTSConfigurationController configurationController = StaticAccessController
 			.getContext().get(BTSConfigurationController.class);
 
-	private IEclipsePreferences preferences = StaticAccessController.getPreferenceStore();
+	protected Style TEXT_STYLE_GREY = StyledString.Style.newBuilder()
+			.setForegroundColor(URI.createURI("color://rgb/200/197/185"))
+			.toStyle();
+
+	protected Style TEXT_STYLE_DARK_GREY = StyledString.Style.newBuilder()
+			.setForegroundColor(URI.createURI("color://rgb/100/98/93"))
+			.toStyle();
+	
+	
+	protected Style TEXT_STYLE_UNDERLINED = StyledString.Style.newBuilder()
+			.setUnderlineColor(URI.createURI("color://rgb/0/0/0"))
+			.toStyle();
+
+
 	/**
 	 * This constructs an instance from a factory and a notifier. <!--
 	 * begin-user-doc --> <!-- end-user-doc -->
@@ -548,7 +563,7 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 		return configurationController;
 	}
 
-	protected IEclipsePreferences getPreferencesStore() {
-		return preferences;
+	protected IEclipsePreferences getPreferencesStore(String node) {
+		return StaticAccessController.getPreferenceStore(node);
 	}
 }
