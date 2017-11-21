@@ -35,10 +35,10 @@ import javax.inject.Named;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
-import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.log.Logger;
 import org.eclipse.e4.ui.services.EContextService;
 
@@ -65,9 +65,6 @@ public class StaticAccessController {
 	/** The context. */
 	@Inject
 	private static IEclipseContext context;
-
-	/** The preference store. */
-	private static IEclipsePreferences preferenceStore = DefaultScope.INSTANCE.getNode("org.bbaw.bts.app");
 
 	@Inject
 	@Named("org.bbaw.bts.ui.resources.BTSResourceProvider")
@@ -145,8 +142,12 @@ public class StaticAccessController {
 	 *
 	 * @return the preference store
 	 */
+	public static IEclipsePreferences getPreferenceStore(String node) {
+		return ConfigurationScope.INSTANCE.getNode(node);
+	}
+
 	public static IEclipsePreferences getPreferenceStore() {
-		return preferenceStore;
+		return getPreferenceStore("org.bbaw.bts.app");
 	}
 
 
@@ -168,5 +169,6 @@ public class StaticAccessController {
 	public void setLogger(Logger logger) {
 		this.logger = logger;
 	}
+
 
 }

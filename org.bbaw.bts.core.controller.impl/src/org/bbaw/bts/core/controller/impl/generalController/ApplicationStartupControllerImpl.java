@@ -510,7 +510,7 @@ public class ApplicationStartupControllerImpl implements
 
 		IEclipsePreferences defaultPrefs = DefaultScope.INSTANCE
 				.getNode("org.bbaw.bts.app");
-		InstanceScope.INSTANCE.getNode("org.bbaw.bts.app");
+		InstanceScope.INSTANCE.getNode("org.bbaw.bts.app"); // XXX ???
 
 		main_project_key = prefs.get(BTSPluginIDs.PREF_MAIN_PROJECT_KEY,
 				defaultPrefs.get(BTSPluginIDs.PREF_MAIN_PROJECT_KEY, null));
