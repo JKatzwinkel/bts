@@ -164,23 +164,13 @@ public class TranslationEditorComposite extends Composite {
 		if (translations == null)
 		{
 			text.setText("");
-			combo.select(0);
+			setLanguage(currentLang);
 			return;
 		}
 		text.setText("");
 		combo.setText("");
 		
-		// load built-in languages
-		for (String l : BTSCoreConstants.LANGS) {
-			String ltrans = translations.getTranslationStrict(l);
-			if (ltrans != null) {
-				combo.select(combo.indexOf(l));
-				loadTranslation(l);
-				return;
-			}
-		}
-		combo.select(0);
-		loadTranslation(combo.getItems()[0]);
+		setLanguage(currentLang);
 
 	}
 
@@ -333,5 +323,13 @@ public class TranslationEditorComposite extends Composite {
 			text.setEnabled(enabled);
 		}
 		super.setEnabled(enabled);
+	}
+
+	public void setLanguage(String lang) {
+		try {
+			combo.select(combo.indexOf(lang));
+		} catch (Exception e) {
+			combo.setText(lang);
+		}
 	}
 }

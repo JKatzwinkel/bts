@@ -22,6 +22,7 @@ import org.bbaw.bts.btsviewmodel.TreeNodeWrapper;
 import org.bbaw.bts.commons.BTSConstants;
 import org.bbaw.bts.commons.BTSPluginIDs;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
+import org.bbaw.bts.core.commons.staticAccess.StaticAccessController;
 import org.bbaw.bts.core.controller.generalController.EditingDomainController;
 import org.bbaw.bts.core.controller.generalController.PermissionsAndExpressionsEvaluationController;
 import org.bbaw.bts.core.corpus.controller.partController.BTSTextEditorController;
@@ -81,6 +82,7 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
@@ -157,6 +159,10 @@ public class EgyLemmatizerPart implements SearchViewer {
 	@Inject
 	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_AUTO_LEMMA_PROPOSAL_SELECTION, nodePath = "org.bbaw.bts.ui.corpus.egy")
 	private Boolean autoLemmaProposalSelection;
+
+	@Inject
+	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.ui.corpus.egy")
+	private String preferredLemmaLabelLanguage;
 
 	@Inject
 	private EMenuService menuService;
@@ -351,6 +357,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 			}
 		});
+
 		lblSearch = new Label(grpLemma, SWT.NONE);
 		lblSearch.setImage(resourceProvider.getImage(Display.getDefault(),
 				BTSResourceProvider.IMG_SEARCH));
@@ -645,6 +652,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 		wordTranslate_Editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
 				true, true));
 		wordTranslate_Editor.layout();
+		wordTranslate_Editor.setLanguage(preferredLemmaLabelLanguage);
 		wordTranslate_Editor
 				.addLanguageSelectionListener(new SelectionAdapter() {
 
@@ -655,6 +663,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 						loadTranslationProposals(selectedEntry);
 					}
 				});
+		
 
 		Composite trans_composite = new Composite(transSashForm, SWT.NONE);
 		trans_composite.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -770,24 +779,19 @@ public class EgyLemmatizerPart implements SearchViewer {
 		if (entry.getTranslations() != null) {
 			// if chosen lemma has translations, pick those for language selected
 			// in translations editor
-			String lang = wordTranslate_Editor.getLanguage();
-			BTSTranslation trans = entry.getTranslations().getBTSTranslation(
-					lang);
-			// if none found for selected language, fallback to de or en
-			if (trans == null) {
-				trans = entry.getTranslations().getBTSTranslation("de");
-			}
-			if (trans == null) {
-				trans = entry.getTranslations().getBTSTranslation("en");
-			}
-			if (trans != null) {
+			BTSTranslation trans = pickAvailableTranslation(entry,
+					wordTranslate_Editor.getLanguage());
+			System.out.println(wordTranslate_Editor.getLanguage());
+
+			if (trans != null && trans.getValue() != null) {
 				// populate list viewer with translation choices
+				wordTranslate_Editor.setLanguage(trans.getLang());
 				translationEditorText = trans.getValue();
 				String[] subtranslations = trans.getValue().split(TRANSLATIONS_SUB_DELIMITER);
 				translationViewer.setInput(subtranslations);
 				if (currentWord.getTranslation() != null) {
 					// try to autoselect current word's translation from translations list
-					String wordTrans = currentWord.getTranslation().getTranslationStrict(lang);
+					String wordTrans = currentWord.getTranslation().getTranslationStrict(preferredLemmaLabelLanguage);
 					if (wordTrans != null && !wordTrans.trim().isEmpty()) {
 						translationEditorText = wordTrans;
 						for (int i=0; i<subtranslations.length; i++) {
@@ -800,6 +804,28 @@ public class EgyLemmatizerPart implements SearchViewer {
 			}
 		}
 		wordTranslate_Editor.setTranslationText(translationEditorText);
+	}
+
+	private BTSTranslation pickAvailableTranslation(BTSLemmaEntry entry, String preferredLanguage) {
+		BTSTranslation trans = entry.getTranslations().getBTSTranslation(
+				preferredLanguage);
+		// if translation is available in preferred language,
+		if (trans != null && trans.getValue() != null && !trans.getValue().isEmpty()) {
+			 return trans;
+		}
+		// if none found for selected language, first try globally set lemma label language preference
+		// and if that doesn't help, fallback to first language
+		// in list that a translation is available for
+		if (!preferredLanguage.equals(preferredLemmaLabelLanguage)) {
+			return pickAvailableTranslation(entry, preferredLemmaLabelLanguage);
+		}
+		for (String fallbackLang : BTSCoreConstants.LANGS) {
+			trans = entry.getTranslations().getBTSTranslation(fallbackLang);
+			if (trans != null && trans.getValue() != null && !trans.getValue().isEmpty()) {
+				 return trans;
+			}
+		}
+		return null;
 	}
 
 	@PreDestroy
