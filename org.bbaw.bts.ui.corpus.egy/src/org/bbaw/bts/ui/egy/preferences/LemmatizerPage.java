@@ -38,7 +38,7 @@ public class LemmatizerPage extends FieldEditorPreferencePage {
 		}
 		
 		addField(new ComboFieldEditor(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, 
-				"Lemma Item Label Language", 
+				"L&emma Item Label Language", 
 				languageOptions, 
 				getFieldEditorParent()));
 

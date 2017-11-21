@@ -32,14 +32,15 @@ package org.bbaw.bts.corpus.btsCorpusModel.provider;
 
 import java.util.Collection;
 import java.util.List;
+
 import org.bbaw.bts.btsmodel.BtsmodelFactory;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSCorpusObject;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSLemmaEntry;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelFactory;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelPackage;
 import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
-import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -208,7 +209,7 @@ public class BTSLemmaEntryItemProvider extends BTSCorpusObjectItemProvider {
 		String translation = getTranslationString(object);
 		if (translation != null && !"".equals(translation))
 		{
-			styledLabel.append(" (" + translation + ")", StyledString.Style.QUALIFIER_STYLER);
+			styledLabel.append(" (" + translation + ")", getTranslationStyle(object));
 		}
 		String typeSubtype = getTypeSubtypeString(object);
 		if (typeSubtype != null && !"".equals(typeSubtype))
@@ -220,23 +221,38 @@ public class BTSLemmaEntryItemProvider extends BTSCorpusObjectItemProvider {
 		return styledLabel;
 	}
 
-	
+
+	private String getLabelLanguage() {
+		IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode("org.bbaw.bts.ui.corpus.egy");
+		 // XXX ufff
+		return prefs.get(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, "en");
+	}
 
 	private String getTranslationString(Object object) {
-		
-		String lang = getPreferencesStore().get(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, "org.bbaw.bts.ui.corpus.egy");
 		String translation = "";
 		if (object instanceof BTSLemmaEntry)
 		{
 			BTSLemmaEntry lemma = (BTSLemmaEntry) object;
 			if (lemma.getTranslations() == null) return translation;
-			translation = lemma.getTranslations().getTranslation(lang);
-			if ("".equals(translation))
-			{
+			translation = lemma.getTranslations().getTranslation(getLabelLanguage());
+			if ("".equals(translation)) {
+				// XXX fallback to german hardcoded but called method hard coded fallback to english
 				translation = lemma.getTranslations().getTranslation("de");
 			}
 		}
 		return translation;
+	}
+
+	private StyledString.Style getTranslationStyle(Object object) {
+		if (object instanceof BTSLemmaEntry) {
+			BTSLemmaEntry lemma = (BTSLemmaEntry) object;
+			if (lemma.getTranslations() != null) {
+				if (lemma.getTranslations().getBTSTranslation(getLabelLanguage()) != null) {
+					return StyledString.Style.QUALIFIER_STYLER;
+				}
+			}
+		}
+		return TEXT_STYLE_DARK_GREY;
 	}
 
 	/**
