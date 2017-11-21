@@ -205,7 +205,6 @@ public class ApplicationStartupControllerImpl implements
 			// XXX if we don't know database location, we need to find out.
 			// if its not at expected location (installdir/dbdir/) then
 			// we have to ask the user
-
 			prefs.put(BTSPluginIDs.PREF_DB_DIR, btsInstallationDir);
 			try {
 				prefs.flush();

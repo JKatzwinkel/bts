@@ -32,6 +32,7 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer
 		System.out.println("Enter in default Preference Initializer");
 		IEclipsePreferences defaultPrefs = DefaultScope.INSTANCE.getNode("org.bbaw.bts.app");
 		IEclipsePreferences prefs = DefaultScope.INSTANCE.getNode("org.bbaw.bts.app");
+		// XXX eh what the fuck?!
 	
 		store.setDefault(BTSPluginIDs.PREF_ACTIVE_CORPORA, defaultPrefs.get(BTSPluginIDs.PREF_ACTIVE_CORPORA, null));
 		prefs.put(BTSPluginIDs.PREF_ACTIVE_CORPORA, defaultPrefs.get(BTSPluginIDs.PREF_ACTIVE_CORPORA, null));

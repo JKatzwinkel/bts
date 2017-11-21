@@ -126,6 +126,7 @@ public class BTSTranslationsImpl extends MinimalEObjectImpl.Container implements
 			{
 				return trans.getValue();
 			}
+			// XXX is this smart tho? does client code expect fallback to english translation?
 			trans = getTranslationInternal(EN);
 			if (trans != null)
 			{

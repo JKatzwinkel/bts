@@ -82,7 +82,7 @@ public class TranslationEditorComposite extends Composite {
 	private EditingDomain domain;
 
 	/** The required. */
-	private boolean required;
+	private boolean valueRequired;
 
 	/** The custom style. */
 	private int customStyle;
@@ -107,11 +107,11 @@ public class TranslationEditorComposite extends Composite {
 	 * @param style the style
 	 * @param translations the translations
 	 * @param domain the domain
-	 * @param required the required
+	 * @param valueRequired the required
 	 */
 	public TranslationEditorComposite(Composite parent, int style,
-			BTSTranslations translations, EditingDomain domain, boolean required, boolean dataBind) {
-		this(parent, style, required, dataBind);
+			BTSTranslations translations, EditingDomain domain, boolean valueRequired, boolean dataBind) {
+		this(parent, style, valueRequired, dataBind);
 		this.translations = translations;
 		this.domain = domain;
 	}
@@ -121,13 +121,13 @@ public class TranslationEditorComposite extends Composite {
 	 *
 	 * @param parent the parent
 	 * @param style the style
-	 * @param required the required
+	 * @param valueRequired the required
 	 */
 	public TranslationEditorComposite(Composite parent, int style,
-			boolean required, boolean dataBind) {
+			boolean valueRequired, boolean dataBind) {
 		super(parent, SWT.NONE);
 		this.dataBind = dataBind;
-		this.required = required;
+		this.valueRequired = valueRequired;
 		this.customStyle = style;
 		createControls();
 	}
@@ -136,10 +136,10 @@ public class TranslationEditorComposite extends Composite {
 	 * Instantiates a new {@link TranslationEditorComposite} and activates databinding.
 	 * @param parent
 	 * @param style
-	 * @param required
+	 * @param valueRequired
 	 */
-	public TranslationEditorComposite(Composite parent, int style, boolean required) {
-		this(parent, style, required, true);
+	public TranslationEditorComposite(Composite parent, int style, boolean valueRequired) {
+		this(parent, style, valueRequired, true);
 	}
 	
 	/**
@@ -147,13 +147,13 @@ public class TranslationEditorComposite extends Composite {
 	 *
 	 * @param translations2 the translations2
 	 * @param editingDomain the editing domain
-	 * @param required the required
+	 * @param valueRequired the required
 	 */
 	public void load(BTSTranslations translations2,
-			EditingDomain editingDomain, boolean required) {
+			EditingDomain editingDomain, boolean valueRequired) {
 		this.translations = translations2;
 		this.domain = editingDomain;
-		this.required = required;
+		this.valueRequired = valueRequired;
 		if (bindingContext == null) {
 			bindingContext = new DataBindingContext();
 		}
@@ -161,6 +161,7 @@ public class TranslationEditorComposite extends Composite {
 			bindingContext.removeBinding(binding);
 			binding.dispose();
 		}
+		String currentLang = getLanguage();
 		if (translations == null)
 		{
 			text.setText("");
@@ -214,7 +215,7 @@ public class TranslationEditorComposite extends Composite {
 		});
 
 		if (translations != null) {
-			load(translations, domain, required);
+			load(translations, domain, valueRequired);
 		}
 	}
 
@@ -243,7 +244,7 @@ public class TranslationEditorComposite extends Composite {
 
 	private void databindTranslation(BTSTranslation trans) {
 		EMFUpdateValueStrategy us = null;
-		if (required) {
+		if (valueRequired) {
 			us = new EMFUpdateValueStrategy();
 			us.setBeforeSetValidator(new StringNotEmptyValidator());
 		}
@@ -259,7 +260,7 @@ public class TranslationEditorComposite extends Composite {
 							BtsmodelPackage.Literals.BTS_TRANSLATION__VALUE)
 							.observe(trans), us, null);
 	
-			if (required) {
+			if (valueRequired) {
 				bindingContext.addValidationStatusProvider(binding);
 				BackgroundControlDecorationSupport.create(binding, SWT.TOP
 						| SWT.LEFT);
