@@ -464,7 +464,9 @@ public class ApplicationStartupControllerImpl implements
 						new Runnable() {
 							public void run() {
 								boolean success = openInstallationWizard();
-								prefs.put("first_startup", "false");
+								if (success) {
+									prefs.put("first_startup", "false");
+								}
 								try {
 									prefs.flush();
 								} catch (BackingStoreException e) {
