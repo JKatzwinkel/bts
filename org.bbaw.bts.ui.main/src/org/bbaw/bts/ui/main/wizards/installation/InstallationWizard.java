@@ -34,7 +34,7 @@ import org.osgi.service.prefs.Preferences;
 
 public class InstallationWizard extends Wizard {
 
-	private WelcomePage welcomePage = new WelcomePage();
+	private WelcomePage welcomePage;;
 	private ConnectToServerPage connectServerPage;
 	private SelectProjectsPage projectPage;
 	private DBInstallationSettingsPage dbPage;
@@ -45,7 +45,7 @@ public class InstallationWizard extends Wizard {
 	private IEclipsePreferences preferences;
 	private Logger logger;
 	private boolean localProject;
-	private FinishInstallationPage finishPage = new FinishInstallationPage();
+	private FinishInstallationPage finishPage;
 	private UserManagerController userManagerController;
 	private EditingDomainController editingDomainController;
 	private boolean success;
@@ -68,6 +68,8 @@ public class InstallationWizard extends Wizard {
 
 	@Override
 	public void addPages() {
+		welcomePage = new WelcomePage();
+
 		connectServerPage = new ConnectToServerPage(preferences.get(
 				BTSPluginIDs.PREF_REMOTE_DB_URL, null));
 
@@ -84,9 +86,11 @@ public class InstallationWizard extends Wizard {
 		createUserPage = new LocalCreateUserPage(userManagerController,
 				editingDomainController);
 
-//		if (startupController.requiresDBInstallation()) {
-			addPage(dbPage);
-//		}
+		finishPage = new FinishInstallationPage();
+
+		if (startupController.requiresDBInstallation()) {
+		  addPage(dbPage);
+		}
 
 		addPage(welcomePage);
 		addPage(createUserPage);

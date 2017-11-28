@@ -37,7 +37,7 @@ public class WelcomePage extends WizardPage
 	 */
 	public void createControl(Composite parent)
 	{
-		Composite container = new Composite(parent, SWT.NULL);
+		Composite container = new Composite(parent, SWT.NONE);
 
 		setControl(container);
 		container.setLayout(new GridLayout(1, false));

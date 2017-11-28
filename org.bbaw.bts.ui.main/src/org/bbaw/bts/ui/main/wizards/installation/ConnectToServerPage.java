@@ -150,6 +150,7 @@ public class ConnectToServerPage extends WizardPage
 			setMessage("The connection you have entered is OK. You can load data from the server.", this.INFORMATION);
 			((InstallationWizard) getWizard()).setRemoteConnection(connection);
 		}
+
 		return connectionOk;
 
 	}
@@ -186,39 +187,40 @@ public class ConnectToServerPage extends WizardPage
 				strategy_2, null);
 		BackgroundControlDecorationSupport.create(binding2, SWT.TOP | SWT.LEFT);
 
-		//
-		uiElement = WidgetProperties.text().observe(errorLabelServer);  
-		// This one listenes to all changes
-		bindingContext.bindValue(uiElement, new AggregateValidationStatus(bindingContext.getBindings(),
-				AggregateValidationStatus.MAX_SEVERITY), null, null);
-		// Lets change the color of the field lastName
-		uiElement.addChangeListener(new IChangeListener()
-		{
-			@Override
-			public void handleChange(ChangeEvent event)
-			{
-				boolean allcomplete = true;
-				for (Object o : bindingContext.getBindings())
-				{
-					Binding binding = (Binding) o;
-					IStatus status = (IStatus) binding.getValidationStatus().getValue();
-					Control control = null;
-					if (binding.getTarget() instanceof SWTVetoableValueDecorator)
-					{
-						SWTVetoableValueDecorator deco = (SWTVetoableValueDecorator) binding.getTarget();
-						control = (Control) deco.getWidget();
-						setWidgetBackground(control, status);
+		// //
+		// uiElement = WidgetProperties.text().observe(errorLabelServer);  
+		// // This one listenes to all changes
+		// bindingContext.bindValue(uiElement, new AggregateValidationStatus(bindingContext.getBindings(),
+		// 		AggregateValidationStatus.MAX_SEVERITY), null, null);
+		
+		// Lets change the color of text field backgrounds
+		// uiElement.addChangeListener(new IChangeListener()
+		// {
+		// 	@Override
+		// 	public void handleChange(ChangeEvent event)
+		// 	{
+		// 		boolean allcomplete = true;
+		// 		for (Object o : bindingContext.getBindings())
+		// 		{
+		// 			Binding binding = (Binding) o;
+		// 			IStatus status = (IStatus) binding.getValidationStatus().getValue();
+		// 			Control control = null;
+		// 			if (binding.getTarget() instanceof SWTVetoableValueDecorator)
+		// 			{
+		// 				SWTVetoableValueDecorator deco = (SWTVetoableValueDecorator) binding.getTarget();
+		// 				control = (Control) deco.getWidget();
+		// 				setWidgetBackground(control, status);
 
-					}
-					if (!status.isOK())
-					{
-						allcomplete = false;
-					}
-				}
-				setPageComplete(allcomplete);
+		// 			}
+		// 			if (!status.isOK())
+		// 			{
+		// 				allcomplete = false;
+		// 			}
+		// 		}
+		// 		setPageComplete(allcomplete);
 
-			}
-		});
+		// 	}
+		// });
 		return bindingContext;
 	}
 
@@ -250,7 +252,7 @@ public class ConnectToServerPage extends WizardPage
 	public boolean canFlipToNextPage() {
 		if (connection != null)
 		{
-			return super.canFlipToNextPage();
+			return connectionOk;
 		}
 		else
 		{
