@@ -600,8 +600,7 @@ public class ApplicationStartupControllerImpl implements
 	protected boolean openInstallationWizard() {
 		InstallationWizard installWizard = new InstallationWizard(context,
 				ApplicationStartupControllerImpl.this, sync, userController);
-		WizardDialog dialog = new WizardDialog(new Shell(Display.getDefault(), SWT.NO_TRIM
-				), installWizard);
+		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), installWizard);
 		if (dialog.open() == WizardDialog.OK) {
 			logger.info("InstallationWizard returned OK");
 			localDBUrl = installWizard.getLocalDBUrl();
@@ -726,7 +725,7 @@ public class ApplicationStartupControllerImpl implements
 
 						}
 					};
-					new ProgressMonitorDialog(new Shell()).run(true, true, op);
+					new ProgressMonitorDialog(Display.getDefault().getActiveShell()).run(true, true, op);
 				} catch (InvocationTargetException e) {
 					// handle exception
 				} catch (InterruptedException e) {

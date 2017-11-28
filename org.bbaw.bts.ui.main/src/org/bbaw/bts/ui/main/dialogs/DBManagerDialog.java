@@ -69,7 +69,7 @@ public class DBManagerDialog extends TitleAreaDialog
 	 */
 	public DBManagerDialog()
 	{
-		super(new Shell(Display.getDefault()));
+		super(Display.getDefault().getActiveShell());
 		System.out.println("construct DB ManagerDialog");
 
 	}
