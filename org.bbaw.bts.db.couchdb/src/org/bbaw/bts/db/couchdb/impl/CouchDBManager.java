@@ -1205,6 +1205,10 @@ public class CouchDBManager implements DBManager {
 		} else if (OSValidator.isMac()) {
 			// FIXME
 		} else if (OSValidator.isUnix()) {
+			System.out.println("Trying to start couchdb using "+fileName);
+			String[] commands = new String[] {"bash", fileName};
+			Process proc = Runtime.getRuntime().exec(commands);
+			proc.waitFor();
 		}
 
 		// set local port and local admin
