@@ -2,7 +2,7 @@ package org.bbaw.bts.ui.main.dialogs;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
+import org.eclipse.swt.widgets.Display;
 import org.bbaw.bts.ui.main.parts.DBManagerPart;
 import org.bbaw.bts.ui.main.parts.UserManagementPart;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
@@ -69,7 +69,7 @@ public class DBManagerDialog extends TitleAreaDialog
 	 */
 	public DBManagerDialog()
 	{
-		super(new Shell());
+		super(new Shell(Display.getDefault()));
 		System.out.println("construct DB ManagerDialog");
 
 	}
