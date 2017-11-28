@@ -1318,6 +1318,7 @@ public class CouchDBManager implements DBManager {
 	}
 
 	private File loadDBSetupFile(String dir) {
+		// XXX name
 
 		File file = null;
 		file = new File(dir);
