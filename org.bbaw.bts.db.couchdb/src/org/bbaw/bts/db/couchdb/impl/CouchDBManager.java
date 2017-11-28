@@ -1297,7 +1297,7 @@ public class CouchDBManager implements DBManager {
 		String fileURL = null;
 		if (entry != null) {
 			fileURL = FileLocator.toFileURL(entry).getPath();
-			fileURL = fileURL.substring(1, fileURL.length());
+			//fileURL = fileURL.substring(1, fileURL.length());
 			file = new File(fileURL);
 			System.out.println("loadCouchDB Base Archive " + fileURL);
 
