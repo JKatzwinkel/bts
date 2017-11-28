@@ -57,7 +57,6 @@ public class BTSFontProviderImplEgy implements BTSFontProvider
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			fontpath = fontpath.substring(1, fontpath.length());
 		}
 		boolean isLoaded = Display.getCurrent().loadFont(fontpath);
 		FontData fontdata = null;

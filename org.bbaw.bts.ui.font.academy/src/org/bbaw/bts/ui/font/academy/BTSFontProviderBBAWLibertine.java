@@ -58,7 +58,6 @@ public class BTSFontProviderBBAWLibertine implements BTSFontProvider
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			fontpath = fontpath.substring(1, fontpath.length());
 		}
 		boolean isLoaded = Display.getCurrent().loadFont(fontpath);
 		FontData fontdata = null;
