@@ -203,7 +203,6 @@ public class EgyLemmatizerPart implements SearchViewer {
 	// boolean if selection is cached and can be loaded when gui becomes visible
 	// or constructed
 	private boolean selectionCached;
-	private Table table;
 	private BTSLemmaEntryNameTranslationViewerFilter lemmaViewerSearchFilter = new BTSLemmaEntryNameTranslationViewerFilter();
 	private BTSLemmatizerEgyObjectByNameViewerSorter sorter;
 	private DataBindingContext word_bindingContext;
@@ -212,7 +211,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 	private Label lblSearch;
 	private Job searchjob;
 	private Button activateButton;
-	
+
 	private HashMap<String, TreeNodeWrapper> lemmaNodeRegistry;
 
 	@Inject
@@ -777,11 +776,8 @@ public class EgyLemmatizerPart implements SearchViewer {
 	private void loadTranslationProposals(BTSLemmaEntry entry) {
 		String translationEditorText = null;
 		if (entry.getTranslations() != null) {
-			// if chosen lemma has translations, pick those for language selected
-			// in translations editor
-			BTSTranslation trans = pickAvailableTranslation(entry,
+			BTSTranslation trans = entry.getTranslations().getBTSTranslation(
 					wordTranslate_Editor.getLanguage());
-			System.out.println(wordTranslate_Editor.getLanguage());
 
 			if (trans != null && trans.getValue() != null) {
 				// populate list viewer with translation choices
@@ -801,32 +797,13 @@ public class EgyLemmatizerPart implements SearchViewer {
 						}
 					}
 				}
+			} else {
+				clearProposals();
 			}
 		}
 		wordTranslate_Editor.setTranslationText(translationEditorText);
 	}
 
-	private BTSTranslation pickAvailableTranslation(BTSLemmaEntry entry, String preferredLanguage) {
-		BTSTranslation trans = entry.getTranslations().getBTSTranslation(
-				preferredLanguage);
-		// if translation is available in preferred language,
-		if (trans != null && trans.getValue() != null && !trans.getValue().isEmpty()) {
-			 return trans;
-		}
-		// if none found for selected language, first try globally set lemma label language preference
-		// and if that doesn't help, fallback to first language
-		// in list that a translation is available for
-		if (!preferredLanguage.equals(preferredLemmaLabelLanguage)) {
-			return pickAvailableTranslation(entry, preferredLemmaLabelLanguage);
-		}
-		for (String fallbackLang : BTSCoreConstants.LANGS) {
-			trans = entry.getTranslations().getBTSTranslation(fallbackLang);
-			if (trans != null && trans.getValue() != null && !trans.getValue().isEmpty()) {
-				 return trans;
-			}
-		}
-		return null;
-	}
 
 	@PreDestroy
 	public void preDestroy() {
