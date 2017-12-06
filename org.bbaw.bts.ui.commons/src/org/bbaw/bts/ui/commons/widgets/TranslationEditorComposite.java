@@ -69,28 +69,20 @@ import org.eclipse.swt.widgets.Text;
  */
 public class TranslationEditorComposite extends Composite {
 	
-	/** The text. */
 	private Text text;
 
-	/** The resource provider. */
 	private BTSResourceProvider resourceProvider = StaticAccessController.getContext().get(BTSResourceProvider.class);
 
-	/** The translations. */
 	private BTSTranslations translations;
 
-	/** The domain. */
 	private EditingDomain domain;
 
-	/** The required. */
 	private boolean valueRequired;
 
-	/** The custom style. */
 	private int customStyle;
 
-	/** The combo. */
 	private Combo combo;
 
-	/** The binding context. */
 	private DataBindingContext bindingContext;
 
 	/** Whether to propagate changes via EMF databinding */
@@ -100,15 +92,6 @@ public class TranslationEditorComposite extends Composite {
 
 	private Binding binding;
 
-	/**
-	 * Instantiates a new translation editor composite.
-	 *
-	 * @param parent the parent
-	 * @param style the style
-	 * @param translations the translations
-	 * @param domain the domain
-	 * @param valueRequired the required
-	 */
 	public TranslationEditorComposite(Composite parent, int style,
 			BTSTranslations translations, EditingDomain domain, boolean valueRequired, boolean dataBind) {
 		this(parent, style, valueRequired, dataBind);
@@ -116,13 +99,6 @@ public class TranslationEditorComposite extends Composite {
 		this.domain = domain;
 	}
 
-	/**
-	 * Instantiates a new translation editor composite.
-	 *
-	 * @param parent the parent
-	 * @param style the style
-	 * @param valueRequired the required
-	 */
 	public TranslationEditorComposite(Composite parent, int style,
 			boolean valueRequired, boolean dataBind) {
 		super(parent, SWT.NONE);
@@ -141,14 +117,8 @@ public class TranslationEditorComposite extends Composite {
 	public TranslationEditorComposite(Composite parent, int style, boolean valueRequired) {
 		this(parent, style, valueRequired, true);
 	}
-	
-	/**
-	 * Load.
-	 *
-	 * @param translations2 the translations2
-	 * @param editingDomain the editing domain
-	 * @param valueRequired the required
-	 */
+
+
 	public void load(BTSTranslations translations2,
 			EditingDomain editingDomain, boolean valueRequired) {
 		this.translations = translations2;
@@ -219,11 +189,7 @@ public class TranslationEditorComposite extends Composite {
 		}
 	}
 
-	/**
-	 * Load translation.
-	 *
-	 * @param lang the lang
-	 */
+
 	private void loadTranslation(String lang) {
 		if(translations == null) return;
 		BTSTranslation trans = translations.getBTSTranslation(lang);
@@ -241,6 +207,7 @@ public class TranslationEditorComposite extends Composite {
 			text.setText((trans.getValue() != null) ? trans.getValue() : "");
 		}
 	}
+
 
 	private void databindTranslation(BTSTranslation trans) {
 		EMFUpdateValueStrategy us = null;
@@ -268,7 +235,8 @@ public class TranslationEditorComposite extends Composite {
 		}
 		
 	}
-	
+
+
 	@Override
 	public void addFocusListener(FocusListener listener) {
 		super.addFocusListener(listener);
