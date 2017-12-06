@@ -257,6 +257,7 @@ public class TranslationEditorComposite extends Composite {
 			return;
 		}
 		BTSTranslation trans = translations.getBTSTranslation(getLanguage());
+		// XXX null pointer???
 		if ((trans.getValue() == null && !"".equals(text.getText().trim()))
 				|| !text.getText().equals(trans.getValue()))
 		{

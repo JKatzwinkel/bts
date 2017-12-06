@@ -696,6 +696,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 						if (list.size() == 1) {
 							translation = (String) selection.getFirstElement();
 						} else {
+							// XXX
 							for (Object s : list) {
 								translation += s.toString() + TRANSLATIONS_SUB_DELIMITER;
 							}
@@ -798,7 +799,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 					}
 				}
 			} else {
-				clearProposals();
+				translationViewer.setInput(new String[] {});
 			}
 		}
 		wordTranslate_Editor.setTranslationText(translationEditorText);
@@ -999,20 +1000,6 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 	}
 
-
-	private void clearProposals() {
-		final TreeNodeWrapper lemmaRootNode = BtsviewmodelFactory.eINSTANCE
-				.createTreeNodeWrapper();
-		// If you want to update the UI
-		sync.asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				lemmaViewer.setInput(lemmaRootNode);
-				translationViewer.setInput(new String[] {});
-			}
-		});
-
-	}
 
 	private void clearAllInput() {
 		final TreeNodeWrapper lemmaRootNode = BtsviewmodelFactory.eINSTANCE
