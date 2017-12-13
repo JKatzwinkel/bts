@@ -1100,7 +1100,7 @@ public class PassportEntryItemEditor extends PassportEntryEditorComposite {
 
 	}
 
-	
+
 
 	@Override
 	protected void setUserMayEditInteral(boolean mayEdit) {

@@ -141,11 +141,13 @@ public class EgyTextTranslationPart {
 		parent.setLayout(new GridLayout(1, false));
 		((GridLayout) parent.getLayout()).marginHeight = 0;
 		((GridLayout) parent.getLayout()).marginWidth = 0;
+
 		Composite composite_1 = new Composite(parent, SWT.NONE);
 		composite_1.setLayout(new GridLayout(1, false));
 		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		((GridLayout) composite_1.getLayout()).marginHeight = 0;
 		((GridLayout) composite_1.getLayout()).marginWidth = 0;
+
 		textViewer = new SourceViewer(composite_1, null, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL);
 		StyledText styledText = textViewer.getTextWidget();
 		styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -170,9 +172,7 @@ public class EgyTextTranslationPart {
 		configureEditorDrawingStrategies(painter);
 		textViewer.addTextPresentationListener(painter);
 		textViewer.addPainter(painter);
-		textViewer.getTextWidget()
-		.addCaretListener(new CaretListener() {
-
+		textViewer.getTextWidget().addCaretListener(new CaretListener() {
 			@Override
 			public void caretMoved(CaretEvent event) {
 				processTextSelection(event);
@@ -181,27 +181,19 @@ public class EgyTextTranslationPart {
 				// TODO
 				if (event.caretOffset < textViewer.getTextWidget()
 						.getText().length()) {
-					String sign = textViewer
-							.getTextWidget()
-							.getText(event.caretOffset,
-									event.caretOffset);
+					String sign = textViewer.getTextWidget().getText(
+							event.caretOffset,
+							event.caretOffset);
 					if (sign != null && !"".equals(sign)) {
-						int lineIndex = textViewer
-								.getTextWidget()
-								.getLineAtOffset(
-										event.caretOffset);
+						int lineIndex = textViewer.getTextWidget().getLineAtOffset(event.caretOffset);
 						int offset = event.caretOffset
-								- textViewer
-										.getTextWidget()
-										.getOffsetAtLine(
-												lineIndex);
+								- textViewer.getTextWidget().getOffsetAtLine(lineIndex);
 					}
 				}
 			}
 		});
-		textViewer.getTextWidget()
-		.addSelectionListener(new SelectionListener() {
 
+		textViewer.getTextWidget().addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				processTextSelection(event);
@@ -214,13 +206,14 @@ public class EgyTextTranslationPart {
 
 			}
 		});
+
 		constructed = true;
-		if (selectionCached)
-		{
+		if (selectionCached) {
 			loadInput(text);
 		} else {
 			eventBroker.post(BTSUIConstants.EVENT_EGY_TEXT_EDITOR_INPUT_REQUESTED+"translation_part", text);
 		}
+
 	}
 	
 	/**
