@@ -44,6 +44,7 @@ import org.bbaw.bts.ui.commons.validator.StringNotEmptyValidator;
 import org.bbaw.bts.ui.resources.BTSResourceProvider;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.databinding.EMFUpdateValueStrategy;
 import org.eclipse.emf.databinding.edit.EMFEditProperties;
 import org.eclipse.emf.edit.command.SetCommand;
@@ -252,16 +253,18 @@ public class TranslationEditorComposite extends Composite {
 	}
 
 	public void save() {
-		if (translations == null)
-		{
+		if (translations == null) {
 			return;
 		}
+		// if no translation available in selected language, create one
+		if (translations.getBTSTranslation(getLanguage()) == null) {
+			translations.setTranslation(text.getText(), getLanguage());
+		}
+		// try and retrieve btstranslation object of selected language
 		BTSTranslation trans = translations.getBTSTranslation(getLanguage());
-		// XXX null pointer???
 		if ((trans.getValue() == null && !"".equals(text.getText().trim()))
-				|| !text.getText().equals(trans.getValue()))
-		{
-			org.eclipse.emf.common.command.Command command = SetCommand
+				|| !text.getText().equals(trans.getValue())) {
+			Command command = SetCommand
 					.create(domain, trans, BtsmodelPackage.Literals.BTS_TRANSLATION__VALUE, text.getText());
 			domain.getCommandStack().execute(command);
 		}
