@@ -1,23 +1,18 @@
 package org.bbaw.bts.ui.egy.parts.translation;
 
-import java.util.List;
-import java.util.Vector;
-
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.bbaw.bts.btsmodel.BTSTranslations;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
-import org.bbaw.bts.ui.egy.parts.EgyTextEditorPart;
+import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
 import org.bbaw.bts.ui.egy.parts.EgyTextTranslationPart;
 import org.bbaw.bts.ui.resources.BTSResourceProvider;
+import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
-import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -30,17 +25,24 @@ public class LangSelectionToolControl {
 	/** The resource provider. */
 	@Inject
 	private BTSResourceProvider resourceProvider;
-	
+
 	@Inject
 	private EPartService partService;
 	private Combo combo;
 	private Composite parent;
 
+	// XXX better have global language preference in addition to lemma label display? 
+	@Inject
+	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.ui.corpus.egy")
+	private String preferredTranslationLanguage;
+
+
 	@Inject
 	public LangSelectionToolControl() {
 		
 	}
-	
+
+
 	@PostConstruct
 	public void createGui(Composite parent) {
 		this.parent = parent;
@@ -65,15 +67,17 @@ public class LangSelectionToolControl {
 				loadTranslation(lang);
 			}
 		});
-		combo.select(0);
+		combo.select(combo.indexOf(preferredTranslationLanguage));
 	}
-	
+
+
 	protected void loadTranslation(String lang) {
 		MPart part = partService.getActivePart();
 		if (part.getObject() instanceof EgyTextTranslationPart)
 		{
 			EgyTextTranslationPart translationPart = (EgyTextTranslationPart) part.getObject();
 			translationPart.setLanguage(lang);
+			combo.select(combo.indexOf(lang));
 		}
 		
 	}
