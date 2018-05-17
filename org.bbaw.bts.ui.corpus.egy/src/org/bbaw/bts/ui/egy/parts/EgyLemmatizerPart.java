@@ -445,7 +445,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 									selectedEntry, true);
 							lemmaID_text.setText(selectedEntry.get_id());
 							lemmaName_text.setText(selectedEntry.getName());
-							loadTranslationProposals(selectedEntry);
+							loadTranslationChoices(selectedEntry);
 
 							// try and select chosen lemma in search result list
 							if (lemmaNodeRegistry != null) {
@@ -533,7 +533,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 									selectedEntry, false);
 							lemmaID_text.setText(selectedEntry.get_id());
 							lemmaName_text.setText(selectedEntry.getName());
-							loadTranslationProposals(selectedEntry);
+							loadTranslationChoices(selectedEntry);
 						}
 					}
 					if (!tn.isChildrenLoaded() || tn.getChildren().isEmpty()) {
@@ -659,7 +659,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 					public void widgetSelected(SelectionEvent e) {
 						// language selection in wordTranslation editor changes.
 						// reload translation viewer.
-						loadTranslationProposals(selectedEntry);
+						loadTranslationChoices(selectedEntry);
 					}
 				});
 		
@@ -774,35 +774,50 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 	}
 
-	private void loadTranslationProposals(BTSLemmaEntry entry) {
-		String translationEditorText = null;
+	private void loadTranslationChoices(BTSLemmaEntry entry) {
+		// default to not showing any translation choices
+		translationViewer.getList().setEnabled(false);
+		translationViewer.setInput(new String[] {"no translation available"});
+
 		if (entry.getTranslations() != null) {
 			BTSTranslation trans = entry.getTranslations().getBTSTranslation(
 					wordTranslate_Editor.getLanguage());
 
 			if (trans != null && trans.getValue() != null) {
+				// set current word/token translation composite text and its language
+				wordTranslate_Editor.setInput(trans.getLang(),
+						trans.getValue());
 				// populate list viewer with translation choices
-				wordTranslate_Editor.setLanguage(trans.getLang());
-				translationEditorText = trans.getValue();
 				String[] subtranslations = trans.getValue().split(TRANSLATIONS_SUB_DELIMITER);
-				translationViewer.setInput(subtranslations);
+				if (subtranslations.length > 0) {
+					translationViewer.setInput(subtranslations);
+				} else {
+					// elaborate on what language it is we have no translation for
+					translationViewer.setInput(new String[] {
+							"no translation available in language "+trans.getLang()});
+				}
+				// disable translation list viewer if none are available
+				translationViewer.getList().setEnabled(subtranslations.length > 0);
+
 				if (currentWord.getTranslation() != null) {
 					// try to autoselect current word's translation from translations list
 					String wordTrans = currentWord.getTranslation().getTranslationStrict(preferredLemmaLabelLanguage);
 					if (wordTrans != null && !wordTrans.trim().isEmpty()) {
-						translationEditorText = wordTrans;
-						for (int i=0; i<subtranslations.length; i++) {
-							if (subtranslations[i].trim().equals(wordTrans)) {
-								translationViewer.getList().select(i);
+						wordTranslate_Editor.setTranslationText(wordTrans);
+						// loop through all choices and see if one of them matches current token's translation string
+						for (int translationChoiceIndex=0; translationChoiceIndex<subtranslations.length;
+								translationChoiceIndex++) {
+							if (subtranslations[translationChoiceIndex].trim().equals(wordTrans)) {
+								translationViewer.getList().select(translationChoiceIndex);
 							}
 						}
+					} else {
+						// if token's translation is not within translation choices, don't display it?!?? XXX
+						wordTranslate_Editor.setTranslationText(null);
 					}
 				}
-			} else {
-				translationViewer.setInput(new String[] {});
 			}
 		}
-		wordTranslate_Editor.setTranslationText(translationEditorText);
 	}
 
 

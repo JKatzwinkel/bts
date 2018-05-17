@@ -120,9 +120,9 @@ public class TranslationEditorComposite extends Composite {
 	}
 
 
-	public void load(BTSTranslations translations2,
+	public void load(BTSTranslations translations,
 			EditingDomain editingDomain, boolean valueRequired) {
-		this.translations = translations2;
+		this.translations = translations;
 		this.domain = editingDomain;
 		this.valueRequired = valueRequired;
 		if (bindingContext == null) {
@@ -133,12 +133,6 @@ public class TranslationEditorComposite extends Composite {
 			binding.dispose();
 		}
 		String currentLang = getLanguage();
-		if (translations == null)
-		{
-			text.setText("");
-			setLanguage(currentLang);
-			return;
-		}
 		text.setText("");
 		combo.setText("");
 		
@@ -269,17 +263,21 @@ public class TranslationEditorComposite extends Composite {
 			domain.getCommandStack().execute(command);
 		}
 	}
-	
-	public void setTranslationText(String text)
-	{
-		this.text.setText(text != null ? text : "");
+
+
+	public void setInput(String lang, String translationText) {
+		setLanguage(lang);
+		setTranslationText(translationText);
 	}
 
-	public String getLanguage()
+
+	public void setTranslationText(String text)
 	{
-		return combo.getText();
+		this.text.setText(text != null ? text : "-");
+		this.text.setEnabled(text != null);
 	}
-	
+
+
 	public void addLanguageSelectionListener(SelectionListener listener)
 	{
 		if (listener != null && !languageSelectionListeners.contains(listener))
@@ -305,4 +303,10 @@ public class TranslationEditorComposite extends Composite {
 			combo.setText(lang);
 		}
 	}
+
+
+	public String getLanguage()	{
+		return combo.getText();
+	}
+
 }
