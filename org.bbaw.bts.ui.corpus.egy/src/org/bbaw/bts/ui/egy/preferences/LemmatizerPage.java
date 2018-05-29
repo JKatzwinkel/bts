@@ -5,7 +5,6 @@ import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.ui.IWorkbench;
 
 public class LemmatizerPage extends FieldEditorPreferencePage {
@@ -36,11 +35,6 @@ public class LemmatizerPage extends FieldEditorPreferencePage {
 				languageOptions[j][i] = BTSCoreConstants.LANGS[j];
 			}
 		}
-		
-		addField(new ComboFieldEditor(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, 
-				"L&emma Item Label Language", 
-				languageOptions, 
-				getFieldEditorParent()));
 
 	}
 	/**

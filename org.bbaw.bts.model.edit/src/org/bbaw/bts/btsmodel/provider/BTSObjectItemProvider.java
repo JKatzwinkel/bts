@@ -65,13 +65,15 @@ public class BTSObjectItemProvider extends AdministrativDataObjectItemProvider
 			.toStyle();
 
 	protected Style TEXT_STYLE_DARK_GREY = StyledString.Style.newBuilder()
-			.setForegroundColor(URI.createURI("color://rgb/100/98/93"))
+			.setForegroundColor(URI.createURI("color://rgb/130/128/123"))
 			.toStyle();
 	
 	
 	protected Style TEXT_STYLE_UNDERLINED = StyledString.Style.newBuilder()
 			.setUnderlineColor(URI.createURI("color://rgb/0/0/0"))
 			.toStyle();
+	
+	public static final String PREF_LEMMATIZER_LABEL_LANG = "pref_lemmatizer_label_lang";
 
 
 	/**

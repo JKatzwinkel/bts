@@ -329,5 +329,4 @@ public class BTSCoreConstants
 
 	public static final String CONTEXT_TYPE_SUBTYEPE_ABBREVIATION_LABEL_MAP = "context_type_subtype_abbreviation_label_map";
 
-	
 }

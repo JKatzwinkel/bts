@@ -17,6 +17,7 @@ import javax.inject.Named;
 import org.bbaw.bts.btsmodel.BTSIdentifiableItem;
 import org.bbaw.bts.btsmodel.BTSObject;
 import org.bbaw.bts.btsmodel.BtsmodelPackage;
+import org.bbaw.bts.btsmodel.provider.BTSObjectItemProvider;
 import org.bbaw.bts.commons.BTSPluginIDs;
 import org.bbaw.bts.core.corpus.controller.partController.EgyTextTranslationPartController;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSAmbivalence;
@@ -109,7 +110,7 @@ public class EgyTextTranslationPart {
 	private boolean selectionCached;
 
 	@Inject
-	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.ui.corpus.egy")
+	@Preference(value = BTSObjectItemProvider.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.app")
 	private String language;
 
 	/** The model annotation map. */

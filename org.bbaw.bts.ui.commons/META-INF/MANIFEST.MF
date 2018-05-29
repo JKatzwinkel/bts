@@ -38,6 +38,7 @@ Require-Bundle: org.eclipse.swt;bundle-version="3.102.0",
  org.eclipse.e4.ui.di
 Import-Package: javax.inject,
  org.bbaw.bts.btsmodel,
+ org.bbaw.bts.btsmodel.provider,
  org.bbaw.bts.btsviewmodel,
  org.bbaw.bts.commons,
  org.bbaw.bts.core.commons,
@@ -49,6 +50,7 @@ Import-Package: javax.inject,
  org.bbaw.bts.searchModel,
  org.bbaw.bts.ui.resources,
  org.eclipse.core.runtime;version="3.4.0",
+ org.eclipse.core.runtime.preferences;version="3.3.0",
  org.eclipse.e4.core.di.annotations,
  org.eclipse.emf.common.command,
  org.eclipse.emf.databinding,
@@ -68,6 +70,7 @@ Import-Package: javax.inject,
  org.eclipse.ui.views.properties,
  org.eclipse.xtext.ui.editor.model,
  org.eclipse.xtext.ui.editor.validation,
- org.eclipse.xtext.validation
+ org.eclipse.xtext.validation,
+ org.osgi.service.prefs;version="1.1.1"
 Bundle-ActivationPolicy: lazy
 Bundle-Version: 3.1.1.qualifier

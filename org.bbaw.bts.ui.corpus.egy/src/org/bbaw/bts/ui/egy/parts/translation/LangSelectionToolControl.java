@@ -4,7 +4,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.bbaw.bts.core.commons.BTSCoreConstants;
-import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
 import org.bbaw.bts.ui.egy.parts.EgyTextTranslationPart;
 import org.bbaw.bts.ui.resources.BTSResourceProvider;
 import org.eclipse.e4.core.di.extensions.Preference;
@@ -31,9 +30,9 @@ public class LangSelectionToolControl {
 	private Combo combo;
 	private Composite parent;
 
-	// XXX better have global language preference in addition to lemma label display? 
+	//XXX
 	@Inject
-	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.ui.corpus.egy")
+	@Preference(value = "locale_lang", nodePath = "org.bbaw.bts.app")
 	private String preferredTranslationLanguage;
 
 

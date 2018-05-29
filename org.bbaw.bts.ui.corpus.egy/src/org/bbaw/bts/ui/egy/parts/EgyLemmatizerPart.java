@@ -16,13 +16,13 @@ import org.bbaw.bts.btsmodel.BTSTranslation;
 import org.bbaw.bts.btsmodel.BTSTranslations;
 import org.bbaw.bts.btsmodel.BtsmodelFactory;
 import org.bbaw.bts.btsmodel.BtsmodelPackage;
+import org.bbaw.bts.btsmodel.provider.BTSObjectItemProvider;
 import org.bbaw.bts.btsviewmodel.BtsviewmodelFactory;
 import org.bbaw.bts.btsviewmodel.BtsviewmodelPackage;
 import org.bbaw.bts.btsviewmodel.TreeNodeWrapper;
 import org.bbaw.bts.commons.BTSConstants;
 import org.bbaw.bts.commons.BTSPluginIDs;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
-import org.bbaw.bts.core.commons.staticAccess.StaticAccessController;
 import org.bbaw.bts.core.controller.generalController.EditingDomainController;
 import org.bbaw.bts.core.controller.generalController.PermissionsAndExpressionsEvaluationController;
 import org.bbaw.bts.core.corpus.controller.partController.BTSTextEditorController;
@@ -55,6 +55,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.e4.core.commands.ECommandService;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
@@ -111,10 +112,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeItem;
 import org.mihalis.opal.promptSupport.PromptSupport;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class EgyLemmatizerPart implements SearchViewer {
 	@Inject
@@ -161,7 +162,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 	private Boolean autoLemmaProposalSelection;
 
 	@Inject
-	@Preference(value = BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, nodePath = "org.bbaw.bts.ui.corpus.egy")
+	@Preference(value = "locale_lang", nodePath = "org.bbaw.bts.app")
 	private String preferredLemmaLabelLanguage;
 
 	@Inject
@@ -214,7 +215,6 @@ public class EgyLemmatizerPart implements SearchViewer {
 
 	private HashMap<String, TreeNodeWrapper> lemmaNodeRegistry;
 
-	@Inject
 	public EgyLemmatizerPart() {
 		lemmaNodeRegistry = new HashMap<String, TreeNodeWrapper>();
 	}
@@ -223,6 +223,16 @@ public class EgyLemmatizerPart implements SearchViewer {
 	public void postConstruct(
 			Composite parent,
 			@Optional @Named(IServiceConstants.ACTIVE_SELECTION) Object selection) {
+
+		if (preferredLemmaLabelLanguage == null) {
+			preferredLemmaLabelLanguage = "en";
+			ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app").put(BTSObjectItemProvider.PREF_LEMMATIZER_LABEL_LANG, 
+					preferredLemmaLabelLanguage);
+			try {
+				ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app").flush();
+			} catch (BackingStoreException e) {}
+		}
+
 		Object o = context.get(BTSCoreConstants.CORE_EXPRESSION_MAY_EDIT);
 		if (o instanceof Boolean)
 		{
@@ -476,38 +486,6 @@ public class EgyLemmatizerPart implements SearchViewer {
 		AdapterFactoryContentProvider contentProvider = new AdapterFactoryContentProvider(
 				factory);
 
-		// table = lemmaViewer.getTable();
-		// table.setHeaderVisible(false);
-		// table.setLinesVisible(false);
-		// // table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-		// 1, 1));
-		//
-		// // Define one exmaple column Columns
-		// TableViewerColumn viewerColumn;
-		// viewerColumn = new TableViewerColumn(lemmaViewer, SWT.NONE);
-		// viewerColumn.getColumn().setText("Lemma Proposals");
-		// viewerColumn.getColumn().setWidth(800);
-		// viewerColumn.getColumn().setMoveable(true);
-		// // for simplification I use the standard labelprovider
-		// viewerColumn.setLabelProvider(new ColumnLabelProvider() {
-		// @Override
-		// public String getText(Object element) {
-		// return labelProvider.getText(element);
-		// }
-		//
-		// @Override
-		// public Color getBackground(Object element) {
-		// return super.getBackground(element);
-		// }
-		//
-		// });
-		// // alternatively use relative size
-		// // last parameter defines if the column is allowed
-		// // to be resized
-		// TableColumnLayout tableColumnLayout = new TableColumnLayout();
-		// tableColumnLayout.setColumnData(viewerColumn.getColumn(),
-		// new ColumnWeightData(400, 800, true));
-		//
 
 		lemmaViewer.setContentProvider(contentProvider);
 		lemmaViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(labelProvider));
@@ -660,6 +638,7 @@ public class EgyLemmatizerPart implements SearchViewer {
 						// language selection in wordTranslation editor changes.
 						// reload translation viewer.
 						loadTranslationChoices(selectedEntry);
+						lemmaViewer.refresh();
 					}
 				});
 		

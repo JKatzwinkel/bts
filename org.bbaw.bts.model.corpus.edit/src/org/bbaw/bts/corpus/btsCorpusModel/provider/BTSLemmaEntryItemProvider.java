@@ -33,14 +33,17 @@ package org.bbaw.bts.corpus.btsCorpusModel.provider;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.bbaw.bts.btsmodel.BtsmodelFactory;
+import org.bbaw.bts.btsmodel.provider.BTSObjectItemProvider;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSCorpusObject;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSLemmaEntry;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelFactory;
 import org.bbaw.bts.corpus.btsCorpusModel.BtsCorpusModelPackage;
-import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -58,6 +61,11 @@ import org.eclipse.swt.widgets.Display;
  * @generated
  */
 public class BTSLemmaEntryItemProvider extends BTSCorpusObjectItemProvider {
+
+	@Inject
+	@Preference(value = "locale_lang", nodePath = "org.bbaw.bts.app")
+	private String lemmaLabelLanguage;
+
 
 	/**
 	 * This constructs an instance from a factory and a notifier.
@@ -223,9 +231,9 @@ public class BTSLemmaEntryItemProvider extends BTSCorpusObjectItemProvider {
 
 
 	private String getLabelLanguage() {
-		IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode("org.bbaw.bts.ui.corpus.egy");
+		IEclipsePreferences prefs = ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app");
 		 // XXX ufff
-		return prefs.get(BTSEGYUIConstants.PREF_LEMMATIZER_LABEL_LANG, "en");
+		return prefs.get(BTSObjectItemProvider.PREF_LEMMATIZER_LABEL_LANG, prefs.get("locale_lang", "de"));
 	}
 
 	private String getTranslationString(Object object) {

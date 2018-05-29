@@ -36,6 +36,7 @@ import org.bbaw.bts.btsmodel.BTSTranslation;
 import org.bbaw.bts.btsmodel.BTSTranslations;
 import org.bbaw.bts.btsmodel.BtsmodelFactory;
 import org.bbaw.bts.btsmodel.BtsmodelPackage;
+import org.bbaw.bts.btsmodel.provider.BTSObjectItemProvider;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
 import org.bbaw.bts.core.commons.staticAccess.StaticAccessController;
 import org.bbaw.bts.ui.commons.controldecoration.BackgroundControlDecorationSupport;
@@ -44,6 +45,7 @@ import org.bbaw.bts.ui.commons.validator.StringNotEmptyValidator;
 import org.bbaw.bts.ui.resources.BTSResourceProvider;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.databinding.EMFUpdateValueStrategy;
 import org.eclipse.emf.databinding.edit.EMFEditProperties;
@@ -92,6 +94,7 @@ public class TranslationEditorComposite extends Composite {
 	private List<SelectionListener> languageSelectionListeners = new ArrayList<SelectionListener>(2);
 
 	private Binding binding;
+
 
 	public TranslationEditorComposite(Composite parent, int style,
 			BTSTranslations translations, EditingDomain domain, boolean valueRequired, boolean dataBind) {
@@ -171,6 +174,14 @@ public class TranslationEditorComposite extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				String lang = combo.getItem(combo.getSelectionIndex());
+
+				ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app").put(BTSObjectItemProvider.PREF_LEMMATIZER_LABEL_LANG, lang);
+				try {
+					ConfigurationScope.INSTANCE.getNode("org.bbaw.bts.app").flush();
+				} catch (Exception e2) {
+					//
+				}
+				
 				loadTranslation(lang);
 				for (SelectionListener l : languageSelectionListeners)
 				{
