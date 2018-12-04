@@ -4,6 +4,7 @@ package org.bbaw.bts.ui.egy.parts;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -539,11 +540,15 @@ public class EgyTextTranslationPart {
 			@UIEventTopic(BTSUIConstants.EVENT_EGY_TEXT_EDITOR_INPUT_REQUESTED+"response") final BTSText current) {
 		setSelection(current);
 	}
-	/**
-	 * Sets the selection.
-	 *
-	 * @param selection the new selection
-	 */
+
+	@Inject
+	public void setSelection(
+			@Optional @Named(IServiceConstants.ACTIVE_SELECTION) BTSTextSelectionEvent selection) {
+		if (selection != null && selection instanceof BTSTextSelectionEvent) {
+			setSelectionInternal(selection);
+		}
+	}
+
 	@Inject
 	public void setSelection(
 			@Optional @Named(IServiceConstants.ACTIVE_SELECTION) BTSIdentifiableItem selection) {
@@ -599,7 +604,36 @@ public class EgyTextTranslationPart {
 			if (pos != null)
 				textViewer.revealRange(pos.getOffset(), pos.getLength());
 		}
-		
+	}
+
+	/**
+	 * Highlights all translations of sentences that are part of the selection passed.
+	 * @param selection
+	 */
+	private void setSelectionInternal(BTSTextSelectionEvent selection) {
+		HashSet<BTSModelAnnotation> modelAnnotations = new HashSet<>();
+		Position firstPosition = null;
+		for (BTSIdentifiableItem i : selection.getSelectedItems()) {
+			BTSModelAnnotation a = i instanceof BTSSenctence ? 
+					modelAnnotationMap.get(i.get_id()) :
+						modelAnnotationMap.get(
+								((BTSIdentifiableItem)i.eContainer()).get_id()
+								);
+			if (a != null) {
+				modelAnnotations.add(a);
+				if (firstPosition == null) {
+					firstPosition = annotationModel.getPosition(a);
+				}
+			}
+		}
+		highlightAnnotations(highlightedAnnotations, false);
+		highlightedAnnotations = new Vector<>(modelAnnotations);
+		highlightAnnotations(highlightedAnnotations, true);
+		if (firstPosition != null) {
+			textViewer.revealRange(
+					firstPosition.getOffset(),
+					firstPosition.getLength());
+		}
 	}
 
 	/**
