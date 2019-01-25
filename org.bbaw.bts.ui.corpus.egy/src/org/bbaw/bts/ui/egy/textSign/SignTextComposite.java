@@ -1,9 +1,5 @@
 package org.bbaw.bts.ui.egy.textSign;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DirectColorModel;
-import java.awt.image.IndexColorModel;
-import java.awt.image.WritableRaster;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +13,8 @@ import org.bbaw.bts.btsmodel.BTSObject;
 import org.bbaw.bts.btsmodel.BTSRelation;
 import org.bbaw.bts.commons.BTSConstants;
 import org.bbaw.bts.core.commons.BTSCoreConstants;
-import org.bbaw.bts.core.commons.corpus.CorpusUtils;
-import org.bbaw.bts.core.corpus.controller.partController.BTSTextEditorController;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSAmbivalence;
-import org.bbaw.bts.corpus.btsCorpusModel.BTSAmbivalenceItem;
-import org.bbaw.bts.corpus.btsCorpusModel.BTSAnnotation;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSGraphic;
-import org.bbaw.bts.corpus.btsCorpusModel.BTSLemmaCase;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSMarker;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSSenctence;
 import org.bbaw.bts.corpus.btsCorpusModel.BTSSentenceItem;
@@ -35,21 +26,17 @@ import org.bbaw.bts.ui.commons.corpus.events.BTSTextSelectionEvent;
 import org.bbaw.bts.ui.commons.corpus.interfaces.IBTSEditor;
 import org.bbaw.bts.ui.commons.corpus.util.BTSEGYUIConstants;
 import org.bbaw.bts.ui.commons.utils.BTSUIConstants;
-import org.bbaw.bts.ui.egy.textSign.support.AmbivalenceEndFigure;
-import org.bbaw.bts.ui.egy.textSign.support.AmbivalenceStartFigure;
-import org.bbaw.bts.ui.egy.textSign.support.CompartementImageFigure;
+import org.bbaw.bts.ui.egy.textSign.support.AmbivalenceBoundsFigure;
 import org.bbaw.bts.ui.egy.textSign.support.ElementFigure;
+import org.bbaw.bts.ui.egy.textSign.support.ElementFiguresComposite;
 import org.bbaw.bts.ui.egy.textSign.support.LineFigure;
 import org.bbaw.bts.ui.egy.textSign.support.MarkerFigure;
 import org.bbaw.bts.ui.egy.textSign.support.TypedLabel;
 import org.bbaw.bts.ui.egy.textSign.support.WordFigure;
-import org.bbaw.bts.ui.resources.BTSResourceProvider;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.FigureCanvas;
-import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.FlowLayout;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.ImageFigure;
@@ -65,73 +52,25 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.e4.core.di.extensions.Preference;
-import org.eclipse.e4.ui.di.UISynchronize;
-import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.common.notify.Notifier;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.TypedEvent;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.PaletteData;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 
 import jsesh.mdc.MDCSyntaxError;
-import jsesh.mdcDisplayer.draw.MDCDrawingFacade;
-import jsesh.mdcDisplayer.preferences.DrawingSpecification;
-import jsesh.mdcDisplayer.preferences.DrawingSpecificationsImplementation;
 
-public class SignTextComposite extends Composite implements IBTSEditor {
+public class SignTextComposite extends ElementFiguresComposite implements IBTSEditor {
 
-	private static final Color COLOR_WORD_DESELECTED = ColorConstants.white;
-	private static final Color COLOR_WORD_SELECTED = ColorConstants.yellow;
-
-	private static final Color COLOR_MARKER_DESELECTED = BTSUIConstants.COLOR_BACKGROUND_DISABLED;
-	private static final Color COLOR_MARKER_SELECTED = ColorConstants.yellow;
-
-//	private static final Color COLOR_SENTENCE_DESELECTED = ColorConstants.white;
-//	private static final Color COLOR_SENTENCE_SELECTED = ColorConstants.yellow;
-//
-//	private static final Color COLOR_AMBIVALENCE_DESELECTED = ColorConstants.white;
-//	private static final Color COLOR_AMBIVALENCE_SELECTED = ColorConstants.yellow;
-
-	private static final Color COLOR_CANVAS_BACKGROUND = ColorConstants.white;
-
-	@Inject
-	private BTSTextEditorController textEditorController;
 	@Inject
 	private IBTSEditor parentEditor;
-	@Inject
-	private UISynchronize sync;
-	@Inject
-	private BTSResourceProvider resourceProvider;
-	
-	@Inject
-	@Preference(value = BTSEGYUIConstants.SIGN_TEXT_SHOW_HIEROGLYPHS, nodePath = "org.bbaw.bts.ui.corpus.egy")
-	private Boolean showHieroglyphs;
-
-	@Inject
-	@Preference(value = BTSEGYUIConstants.SIGN_TEXT_SHOW_FLEXION, nodePath = "org.bbaw.bts.ui.corpus.egy")
-	private Boolean showFlexion;
-	
-	@Inject
-	@Preference(value = BTSEGYUIConstants.SIGN_TEXT_SHOW_LEMMAID, nodePath = "org.bbaw.bts.ui.corpus.egy")
-	private Boolean showLemmaId;
 	
 	@Inject
 	@Preference(nodePath = "org.bbaw.bts.ui.corpus.egy")
 	IEclipsePreferences preferences;
-
-	private Integer showTransLangMask = 0;
 
 	@Inject
 	@Preference(value = BTSEGYUIConstants.SIGN_TEXT_SHOW_LINE_WIDTH, nodePath = "org.bbaw.bts.ui.corpus.egy")
@@ -144,49 +83,27 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 
 	private ElementFigure selectedElement;
 
-	private Composite parentComposite;
 	private FlowLayout layout;
 	private Figure container;
-	private DrawingSpecification drawingSpecifications = new DrawingSpecificationsImplementation();
-	private Map<String, IFigure> wordMap;
 	protected int selectedIndex;
-	private Adapter notifier;
-	private boolean notifyWords = true;
 	private LineFigure currentLineFigure;
 	private int lineIndex = 1;
 	private Map<Integer, LineFigure> lineMap = new HashMap<>();
-	private MouseListener elementSelectionListener;
 	private int cachedIndex;
 	private MouseMotionListener mouseMotionListener;
 	private KeyListener keyListener;
 	private FigureCanvas canvas;
-	private Map<String, List<BTSInterTextReference>> relatingObjectsMap;
-	private List<BTSObject> continuingRelatingObjects;
-	private HashMap<String, List<ElementFigure>> relatingObjectFigureMap;
 	private BTSTextContent textContent;
 	private BTSObject btsObject;
-	private List<Image> imageList = new Vector<Image>(1000);
-	private boolean enabled;
-	private Font font = JFaceResources.getFontRegistry().get(JFaceResources.DEFAULT_FONT);
 
-	private static final String VERS_FRONTER_MARKER = "\uDB80\uDC81"; //mv
-	private static final String VERS_BREAK_MARKER = "\uDB80\uDC80"; //v
-	private static final String BROKEN_VERS_MARKER = "\uDB80\uDC82";
-	private static final String DISPUTALBE_VERS_MARKER = "\u2E2E\uDB80\uDC80?";
-	private static final String DELETED_VERS_MARKER = "{\uDB80\uDC80}";
-	private static final String DESTROYED_VERS_MARKER = "[\uDB80\uDC80]";
-	private static final String MISSING_VERS_MARKER = "\u2329\uDB80\uDC80\u232A";
-	private static final int MAX_IMAGE_SIZE = 200;
 
 	@Inject
-	public SignTextComposite(Composite parent) {
-		super(parent, SWT.NONE);
-		this.parentComposite = parent;
-		parent.setLayout(new FillLayout());
-		this.setLayout(new FillLayout());
-		createEditor();
+	public SignTextComposite(Composite parent, IBTSEditor parentEditor) {
+		super(parent);
+		this.parentEditor = parentEditor;
 	}
-	
+
+
 	/**
 	 * (De)activates {@link BTSWord}-wise graphical update on model changes.
 	 * BTWord objects currently on display in sign text editor get
@@ -200,48 +117,9 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		notifyWords = value;
 	}
 
-	private void createEditor() {
+	protected void createEditor() {
 		this.setLayout(new FillLayout());
 
-		notifier = new Adapter() {
-
-			@Override
-			public void setTarget(Notifier newTarget) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void notifyChanged(final Notification notification) {
-			
-				if (notifyWords) {
-					System.out.println(" notifyChanged " + notification);
-					
-					sync.asyncExec(new Runnable()
-					{
-						public void run()
-						{
-							updateFigureFromWord(notification);
-						}
-					});
-				}
-
-			}
-
-			@Override
-			public boolean isAdapterForType(Object type) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-
-			@Override
-			public Notifier getTarget() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		};
-
-		
 		canvas = new FigureCanvas(this);
 		// lightWeightSystem = new LightweightSystem(canvas);
 		canvas.setData("org.eclipse.e4.ui.css.CssClassName", "SignTextCanvas");
@@ -258,38 +136,31 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		container.setLayoutManager(layout);
 		container.setBackgroundColor(COLOR_CANVAS_BACKGROUND);
 
-		elementSelectionListener = makeElementSelectionListener();
-
 		mouseMotionListener = new MouseMotionListener() {
 
 			@Override
 			public void mouseMoved(MouseEvent me) {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			public void mouseHover(MouseEvent me) {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			public void mouseExited(MouseEvent me) {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			public void mouseEntered(MouseEvent me) {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			public void mouseDragged(MouseEvent me) {
 				// TODO Auto-generated method stub
-
 			}
 		};
 		keyListener = new KeyListener() {
@@ -297,7 +168,6 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 			@Override
 			public void keyReleased(KeyEvent ke) {
 				// TODO Auto-generated method stub
-
 			}
 
 			@Override
@@ -501,40 +371,36 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		return figure;
 	}
 
-	private MouseListener makeElementSelectionListener() {
-		MouseListener listener = new MouseListener() {
-
-			@Override
-			public void mousePressed(MouseEvent me) {
-				if (me.getSource() instanceof ElementFigure) {
-					ElementFigure figure = (ElementFigure) me.getSource();
-					if (figure.getParent() instanceof LineFigure
-							&& figure.getParent() != currentLineFigure) {
-						lineIndex = container.getChildren().indexOf(
-								figure.getParent());
+	protected MouseListener elementSelectionListener() {
+		if (elementSelectionListener == null) {
+			elementSelectionListener = new MouseListener() {
+	
+				@Override
+				public void mousePressed(MouseEvent me) {
+					if (me.getSource() instanceof ElementFigure) {
+						ElementFigure figure = (ElementFigure) me.getSource();
+						if (figure.getParent() instanceof LineFigure
+								&& figure.getParent() != currentLineFigure) {
+							lineIndex = container.getChildren().indexOf(
+									figure.getParent());
+						}
+						setSelectionInternal(figure);
 					}
-					setSelectionInternal(figure);
 				}
-				// System.out.println(me);
-
-			}
-
-
-			@Override
-			public void mouseReleased(MouseEvent me) {
-				// System.out.println(me);
-
-			}
-
-			@Override
-			public void mouseDoubleClicked(MouseEvent me) {
-				// System.out.println(me);
-
-			}
-
-		};
-		return listener;
+	
+				@Override
+				public void mouseReleased(MouseEvent me) {
+				}
+	
+				@Override
+				public void mouseDoubleClicked(MouseEvent me) {
+				}
+	
+			};
+		}
+		return elementSelectionListener;
 	}
+
 
 	protected void updateFigureFromWord(Notification notification) {
 		BTSWord word = null;
@@ -630,12 +496,10 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 						BTSMarker marker = (BTSMarker) senItem;
 						itemFigure = makeMarkerFigure(marker);
 						appendFigure(itemFigure);
-
 					}
 					else if (senItem instanceof BTSAmbivalence) {
 						BTSAmbivalence ambivalence = (BTSAmbivalence) senItem;
 						makeAmbivalenceFigures(ambivalence);
-
 					}
 					
 					if (itemFigure != null) {
@@ -680,7 +544,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		parentComposite.layout();
 	}
 
-	private void processReferences(ElementFigure itemFigure,
+	protected void processReferences(ElementFigure itemFigure,
 			List<BTSInterTextReference> list, BTSSentenceItem senItem) {
 			// FIXME ende einer annotation berechnen!!!!!!!!
 			for (BTSInterTextReference ref : list)
@@ -724,250 +588,6 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		
 	}
 
-	/** processes rubra and possible other annotations that concern styling of wordfigure.
-	 * @param itemFigure
-	 * @param relatingObject
-	 */
-	private void processStylingAnnotations(ElementFigure itemFigure,
-			BTSObject relatingObject) {
-		if (relatingObject instanceof BTSAnnotation 
-				&& relatingObject.getType().equals(CorpusUtils.ANNOTATION_RUBRUM_TYPE) 
-				&& itemFigure instanceof WordFigure)
-		{
-			for (Object fig : itemFigure.getChildren()) {
-				if (fig instanceof TypedLabel && ((TypedLabel)fig).getType() == TypedLabel.TRANSLITERATION) {
-					 ((TypedLabel)fig).setForegroundColor(BTSUIConstants.COLOR_RUBRUM);
-				}
-			}
-		}
-		
-	}
-
-	private void updateRelatingObjectFigureMap(String relatingObjectID,
-			ElementFigure itemFigure) {
-		if (relatingObjectFigureMap == null)
-		{
-			relatingObjectFigureMap = new HashMap<String, List<ElementFigure>>();
-		}
-		List<ElementFigure> list = relatingObjectFigureMap.get(relatingObjectID);
-		if (list == null)
-		{
-			list = new Vector<ElementFigure>(4);
-			relatingObjectFigureMap.put(relatingObjectID, list);
-		}
-		if (!list.contains(itemFigure))
-		{
-			list.add(itemFigure);
-		}
-	}
-
-	private void makeAmbivalenceFigures(BTSAmbivalence ambivalence) {
-
-		appendFigure(
-				makeAmbivalenceBoundsFigure(ambivalence, ElementFigure.AMBIVALENCE_START)
-				);
-
-		for (BTSLemmaCase lemmaCase : ambivalence.getCases()) {
-			ElementFigure caseFigure = makeCaseFigure(lemmaCase);
-			appendFigure(caseFigure);
-
-			for (BTSAmbivalenceItem amItem : lemmaCase.getScenario()) {
-				ElementFigure itemFigure = null;
-				if (amItem instanceof BTSWord) {
-					BTSWord word = (BTSWord) amItem;
-					itemFigure = makeWordFigure(word);
-					appendFigure(itemFigure);
-				} else if (amItem instanceof BTSMarker) {
-					BTSMarker marker = (BTSMarker) amItem;
-					itemFigure = makeMarkerFigure(marker);
-					appendFigure(itemFigure);
-				}
-				if (itemFigure != null && amItem instanceof BTSSentenceItem) {
-					BTSSentenceItem  senItem = (BTSSentenceItem) amItem;
-
-					if (relatingObjectsMap != null && relatingObjectsMap.containsKey(senItem.get_id()))
-					{
-						List<BTSInterTextReference> list = relatingObjectsMap.get(senItem.get_id());
-						processReferences(itemFigure, list, senItem);
-					}
-					if (!continuingRelatingObjects.isEmpty())
-					{
-						for (BTSObject o : continuingRelatingObjects)
-						{
-							itemFigure.addRelatingObject(o);
-							processStylingAnnotations(itemFigure, o);
-							updateRelatingObjectFigureMap(o.get_id(), itemFigure);
-						}
-						//add continuing relating objects to figure!
-					}
-				// process relating Objects
-				}
-			}
-		}
-
-		appendFigure(
-				makeAmbivalenceBoundsFigure(ambivalence, ElementFigure.AMBIVALENCE_END)
-				);
-	}
-
-
-	private ElementFigure makeCaseFigure(BTSLemmaCase lemmaCase) {
-		MarkerFigure fig = new MarkerFigure("case");
-		// add name
-		if (lemmaCase.getName() != null && !"".equals(lemmaCase.getName())) {
-			org.eclipse.draw2d.Label l = new org.eclipse.draw2d.Label();
-			l.setText(lemmaCase.getName());
-			fig.add(l);
-		}
-		fig.setType(ElementFigure.LEMMA_CASE);
-		fig.setModelObject(lemmaCase);
-		fig.setSize(15, 90);
-		fig.addMouseListener(elementSelectionListener);
-		return fig;
-	}
-
-
-	/**
-	 * Creates an {@link ElementFigure} instance representing the beginning or the end of an ambivalence
-	 * @param ambivalence the {@link BTSAmbivalence} represented by the to-be-returned figure
-	 * @param type either {@link ElementFigure#AMBIVALENCE_START} or {@link ElementFigure#AMBIVALENCE_END}
-	 * @return
-	 */
-	private ElementFigure makeAmbivalenceBoundsFigure(BTSAmbivalence ambivalence, String type) {
-		// TODO make this go away pls!!!
-		ElementFigure fig = type.equals(ElementFigure.AMBIVALENCE_START) ?
-				new AmbivalenceStartFigure("") : new AmbivalenceEndFigure("");
-		fig.setType(type);
-		fig.setModelObject(ambivalence);
-		fig.setSize(15, 90);
-		fig.addMouseListener(elementSelectionListener);
-		return fig;
-	}
-
-
-	private ElementFigure makeMarkerFigure(BTSMarker marker) {
-		String mType = marker.getType();
-		if (mType != null)
-		{
-			if (mType.equals(BTSConstants.TEXT_VERS_FRONTIER_MARKER)) {
-				mType = VERS_FRONTER_MARKER;
-			} else if (marker.getType().equals(
-					BTSConstants.TEXT_VERS_BREAK_MARKER)) {
-				mType = VERS_BREAK_MARKER;
-			} else if (marker.getType().equals(
-					BTSConstants.BROKEN_VERS_MARKER)) {
-				mType = BROKEN_VERS_MARKER;
-			}else if (marker.getType().equals(
-					BTSConstants.DESTRUCTION_MARKER)) {
-				mType = "destruction";
-			}
-			else if (marker.getType().equals(
-					BTSConstants.DISPUTABLE_VERS_MARKER)) {
-				mType = DISPUTALBE_VERS_MARKER;
-			}else if (marker.getType().equals(
-					BTSConstants.DESTROYED_VERS_MARKER)) {
-				mType = DESTROYED_VERS_MARKER;
-			}else if (marker.getType().equals(
-					BTSConstants.DELETED_VERS_MARKER)) {
-				mType = DELETED_VERS_MARKER;
-			}else if (marker.getType().equals(
-					BTSConstants.MISSING_VERS_MARKER)) {
-				mType = MISSING_VERS_MARKER;
-			}
-			else if (marker.getType().equals(
-					BTSConstants.DESTROYEDVERSMARKER)) {
-				mType = (BTSConstants.DESTROYEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DELETEDVERSMARKER)) {
-				mType = (BTSConstants.DELETEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DISPUTABLEVERSMARKER)) {
-				mType = (BTSConstants.DISPUTABLEVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.RESTORATIONOVERRASURMARKER)) {
-				mType = (BTSConstants.RESTORATIONOVERRASURMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.ANCIENTEXPANDEDMARKER)) {
-				mType = (BTSConstants.ANCIENTEXPANDEDMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.RASURMARKER)) {
-				mType = (BTSConstants.RASURMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.EMENDATIONVERSMARKER)) {
-				mType = (BTSConstants.EMENDATIONVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DESTROYEDVERSFRONTIERMARKER)) {
-				mType = (BTSConstants.DESTROYEDVERSFRONTIERMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.PARTIALDESTROYEDVERSMARKER)) {
-				mType = (BTSConstants.PARTIALDESTROYEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.PARTIALDESTROYEDDISPUTABLEVERSMARKER)) {
-				mType = (BTSConstants.PARTIALDESTROYEDDISPUTABLEVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DESTROYEDDISPUTABLEVERSFRONTIERMARKER)) {
-				mType = (BTSConstants.DESTROYEDDISPUTABLEVERSFRONTIERMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DISPUTABLEDESTROYEDVERSMARKER)) {
-				mType = (BTSConstants.DISPUTABLEDESTROYEDVERSMARKER_SIGN);
-				
-			}
-			
-			else if (marker.getType().equals(
-					BTSConstants.DELETEDDISPUTABLEVERSMARKER)) {
-				mType = (BTSConstants.DELETEDDISPUTABLEVERSMARKER_SIGN);
-				
-			}
-			else if (marker.getType().equals(
-					BTSConstants.MISSINGDISPUTABLEVERSMARKER)) {
-				mType = (BTSConstants.MISSINGDISPUTABLEVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DISPUTABLEDELETEDVERSMARKER)) {
-				mType = (BTSConstants.DISPUTABLEDELETEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.PARTIALDESTROYEDDELETEDVERSMARKER)) {
-				mType = (BTSConstants.PARTIALDESTROYEDDELETEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DESTROYEDDELETEDVERSMARKER)) {
-				mType = (BTSConstants.DESTROYEDDELETEDVERSMARKER_SIGN);
-				
-			}else if (marker.getType().equals(
-					BTSConstants.DELETEDDESTROYEDVERSMARKER)) {
-				mType = (BTSConstants.DELETEDDESTROYEDVERSMARKER_SIGN);
-				
-			}
-		}
-		else
-		{
-			mType = "##";
-		}
-		MarkerFigure fig = new MarkerFigure(mType);
-		// add name
-		if (marker.getName() != null && !"".equals(marker.getName())) {
-			org.eclipse.draw2d.Label l = new org.eclipse.draw2d.Label();
-			l.setText(marker.getName());
-			fig.add(l);
-		}
-		fig.setType(ElementFigure.MARKER);
-		fig.setModelObject(marker);
-		fig.setSize(15, 90);
-		fig.addMouseListener(elementSelectionListener);
-		return fig;
-	}
 
 	private void purgeAll() {
 		
@@ -998,138 +618,8 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		relatingObjectFigureMap = null;
 	}
 
-	/**
-	 * For a {@link BTSWord}, determine which background color is to be used for rendering an unselected {@link WordFigure},
-	 * based on whether a Lemma Key is present for the given Word, i.e. whether the word has already been lemmatized. 
-	 * @param word {@link BTSWord} object
-	 * @return {@link BTSUIConstants#COLOR_LEMMA} if lemmatized, {@link #COLOR_WORD_DESELECTED} otherwise
-	 */
-	private Color colorWordDeselected(BTSWord word) {
-		return (word.getLKey() != null && !word.getLKey().isEmpty()) ? 
-				BTSUIConstants.COLOR_LEMMA : COLOR_WORD_DESELECTED;
-	}
 
-	private ElementFigure makeWordFigure(BTSWord word) {
-		TypedLabel label = new TypedLabel();
-		label.setText(word.getWChar());
-		label.setType(TypedLabel.TRANSLITERATION);
-
-		final WordFigure rect = new WordFigure(label);
-		rect.setBackgroundColor(colorWordDeselected(word));
-		rect.setModelObject(word);
-		rect.setType(ElementFigure.WORD);
-
-		wordMap.put(word.get_id(), rect);
-		// gridLayout = new GridLayout();
-		// gridLayout.numColumns = 1;
-		// gridLayout.makeColumnsEqualWidth = false;
-
-		ToolbarLayout tl = new ToolbarLayout();
-		tl.setHorizontal(false);
-		tl.setSpacing(5);
-		String mdc = transformWordToMdCString(word);
-
-		if (showHieroglyphs)
-		{
-		ImageFigure imageFigure = new CompartementImageFigure();
-		// System.out.println("mdc " + mdc);
-			
-		if (mdc != null && !"".equals(mdc) && imageList.size() < MAX_IMAGE_SIZE)
-		{
-			try {
-				Image image = transformToSWT(getImageData(mdc));
-				//			String path = "E:/dev_resources/icons_48/save.png"; //$NON-NLS-1$
-				//
-				// image = new Image(Display.getDefault(), path);
-				imageFigure.setImage(image);
-			} catch (MDCSyntaxError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		else if (mdc != null && !"".equals(mdc))
-		{
-			rect.setMdc(mdc);
-		}
-		// rect.getAttributesCompartment().add(imageFigure);
-		rect.setImageFigure(imageFigure);
-		rect.add(imageFigure);
-		}
-
-		if (showLemmaId)
-		{
-			// add lemma key
-			addLKeyToWordFigure(word, rect);
-		}
-		
-		if (showFlexion)
-		{
-			// add flexion code
-			addFCodeToWordFigure(word, rect);
-		}
-
-		for (int i=0; i<BTSCoreConstants.LANGS.length; i++) {
-			String lang = BTSCoreConstants.LANGS[i];
-			if ((showTransLangMask>>i & 1) == 1) {
-				addTransToWordFigure(word, rect, lang);
-			}
-		}
-		rect.setSize(rect.calculateWidth(), 290);
-		rect.addFigureListener(new FigureListener() {
-
-			@Override
-			public void figureMoved(IFigure source) {
-
-				// Integer n = null;
-				// System.out.println(n.toString());
-
-			}
-		});
-		rect.addMouseListener(elementSelectionListener);
-		rect.setLayoutManager(tl);
-
-		if (!word.eAdapters().contains(notifier)) {
-			word.eAdapters().add(notifier);
-		}
-		return rect;
-	}
-
-	private void addTransToWordFigure(BTSWord word, WordFigure rect,
-			String language) {
-		TypedLabel l = new TypedLabel();
-		l.setTranslationLang(language);
-		if (word.getTranslation() != null) {
-			String trans = word.getTranslation().getTranslationStrict(language);
-			if (trans != null && !"".equals(trans)) {
-				l.setText(language + ": " + trans);
-			}
-		}
-		rect.add(l);
-	}
-
-	private void addFCodeToWordFigure(BTSWord word, WordFigure rect) {
-		TypedLabel l = new TypedLabel();
-		l.setType(TypedLabel.FLEXION);
-		if (word.getFlexCode() != null && !"".equals(word.getFlexCode())) {
-			l.setText(word.getFlexCode());
-			l.setIcon(resourceProvider.getImage(Display.getCurrent(), BTSResourceProvider.IMG_FLEXION));
-		}
-		rect.add(l);
-	}
-
-	private void addLKeyToWordFigure(BTSWord word, WordFigure wordfigure) {
-		// FIXME load lemma object and show lemma transliteration
-		TypedLabel l = new TypedLabel();
-		l.setType(TypedLabel.LEMMA);
-		if (word.getLKey() != null && !"".equals(word.getLKey())) {
-			l.setText(word.getLKey());
-			l.setIcon(resourceProvider.getImage(Display.getCurrent(),
-					BTSResourceProvider.IMG_LEMMA));
-		}
-		wordfigure.add(l);
-	}
-
-	private void appendFigure(ElementFigure figure) {
+	protected void appendFigure(ElementFigure figure) {
 		if (currentLineFigure == null) {
 			currentLineFigure = makeLineFigure();
 		}
@@ -1137,19 +627,12 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 				
 		if (figure.getType().equals(ElementFigure.SENTENCE_START)) {
 			currentLineFigure = makeLineFigure();
-			currentLineFigure.add(figure);
-		} else if (figure.getType().equals(ElementFigure.SENTENCE_END)) {
-			currentLineFigure.add(figure);
-		} else if (currentLineFigure.getSpaceLength() + len <= max_line_length) {
-			currentLineFigure.add(figure);
-		} else   {
+		} else if (!(currentLineFigure.getSpaceLength() + len <= max_line_length)
+				&& !figure.getType().equals(ElementFigure.SENTENCE_END)) {
 			currentLineFigure = makeLineFigure();
-			currentLineFigure.add(figure);
 		}
-		// System.out.println("currentLineFigure children size "
-		// + currentLineFigure.getChildren().size());
-		// System.out.println("add figure "
-		// + figureCounter);
+		currentLineFigure.add(figure);
+		figure.addMouseListener(elementSelectionListener());
 	}
 
 	private LineFigure makeLineFigure() {
@@ -1167,20 +650,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 	}
 
 
-	/**
-	 * Creates an {@link ElementFigure} instance representing the beginning or end of a sentence. 
-	 * @param sentence
-	 * @param type either {@link ElementFigure#SENTENCE_START} or {@link ElementFigure#SENTENCE_END}
-	 * @return
-	 */
-	private ElementFigure makeSentenceBoundsFigure(BTSSenctence sentence, String type) {
-		MarkerFigure fig = new MarkerFigure(" § ");
-		fig.setModelObject(sentence);
-		fig.setType(type);
-		fig.setSize(15, 90);
-		fig.addMouseListener(elementSelectionListener);
-		return fig;
-	}
+
 
 
 	private void setDeselected(ElementFigure figure, int eventType) {
@@ -1191,7 +661,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 						colorWordDeselected((BTSWord)figure.getModelObject()));
 			} else if (figure instanceof MarkerFigure) {
 				figure.setBackgroundColor(COLOR_MARKER_DESELECTED);
-			}else if (figure instanceof AmbivalenceStartFigure || figure instanceof AmbivalenceEndFigure) {
+			}else if (figure instanceof AmbivalenceBoundsFigure) {
 				figure.setBackgroundColor(BTSUIConstants.VIEW_FOREGROUND_DESELECTED_COLOR);
 			}
 			figure.repaint();
@@ -1240,7 +710,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 			figure.setBackgroundColor(COLOR_WORD_SELECTED);
 		} else if (figure instanceof MarkerFigure) {
 			figure.setBackgroundColor(COLOR_MARKER_SELECTED);
-		}else if (figure instanceof AmbivalenceStartFigure || figure instanceof AmbivalenceEndFigure) {
+		}else if (figure instanceof AmbivalenceBoundsFigure) {
 			figure.setBackgroundColor(COLOR_MARKER_SELECTED);
 		}
 		figure.repaint();
@@ -1306,88 +776,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 	}
 
 
-	private Image transformToSWT(BufferedImage bufferedImage) {
-		Image image = null;
-		if (bufferedImage.getColorModel() instanceof DirectColorModel) {
-			DirectColorModel colorModel = (DirectColorModel) bufferedImage
-					.getColorModel();
-			PaletteData palette = new PaletteData(colorModel.getRedMask(),
-					colorModel.getGreenMask(), colorModel.getBlueMask());
-			ImageData data = new ImageData(bufferedImage.getWidth(),
-					bufferedImage.getHeight(), colorModel.getPixelSize(),
-					palette);
-			for (int y = 0; y < data.height; y++) {
-				for (int x = 0; x < data.width; x++) {
-					int rgb = bufferedImage.getRGB(x, y);
-					int pixel = palette.getPixel(new RGB((rgb >> 16) & 0xFF,
-							(rgb >> 8) & 0xFF, rgb & 0xFF));
-					data.setPixel(x, y, pixel);
-					if (colorModel.hasAlpha()) {
-						data.setAlpha(x, y, (rgb >> 24) & 0xFF);
-					}
-				}
-			}
-			image = new Image(Display.getCurrent(), data);
-		} else if (bufferedImage.getColorModel() instanceof IndexColorModel) {
-			IndexColorModel colorModel = (IndexColorModel) bufferedImage
-					.getColorModel();
-			int size = colorModel.getMapSize();
-			byte[] reds = new byte[size];
-			byte[] greens = new byte[size];
-			byte[] blues = new byte[size];
-			colorModel.getReds(reds);
-			colorModel.getGreens(greens);
-			colorModel.getBlues(blues);
-			RGB[] rgbs = new RGB[size];
-			for (int i = 0; i < rgbs.length; i++) {
-				rgbs[i] = new RGB(reds[i] & 0xFF, greens[i] & 0xFF,
-						blues[i] & 0xFF);
-			}
-			PaletteData palette = new PaletteData(rgbs);
-			ImageData data = new ImageData(bufferedImage.getWidth(),
-					bufferedImage.getHeight(), colorModel.getPixelSize(),
-					palette);
-			data.transparentPixel = colorModel.getTransparentPixel();
-			WritableRaster raster = bufferedImage.getRaster();
-			int[] pixelArray = new int[1];
-			for (int y = 0; y < data.height; y++) {
-				for (int x = 0; x < data.width; x++) {
-					raster.getPixel(x, y, pixelArray);
-					data.setPixel(x, y, pixelArray[0]);
-				}
-			}
-			image = new Image(Display.getCurrent(), data);
-		}
-		imageList .add(image);
-		return image;
 
-	}
-
-
-	private BufferedImage getImageData(String topItemList)
-			throws MDCSyntaxError {
-		BufferedImage result;
-		{
-			MDCDrawingFacade facade = new MDCDrawingFacade();
-			facade.setDrawingSpecifications(drawingSpecifications);
-			facade.setMaxSize(5000, 45);
-			facade.setCadratHeight(30);
-			result = facade.createImage(topItemList);
-		}
-		return result;
-	}
-
-
-	private String transformWordToMdCString(BTSWord word) {
-		String mdc = "";
-		// if (!word.getGraphics().isEmpty()) {
-		// for (BTSGraphic graphic : word.getGraphics()) {
-		// mdc += graphic.getCode();
-		// }
-		// }
-		mdc = textEditorController.transformWordToMdCString(word, -1);
-		return mdc; // mdc;
-	}
 
 
 	public void setTextSelectionEvent(String event) {
@@ -1559,7 +948,7 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 			for (Object fig : wf.getChildren()) {
 				if (fig instanceof ImageFigure) {
 					ImageFigure imf = (ImageFigure) fig;
-					String mdc = transformWordToMdCString(word);
+					String mdc = textEditorController.transformWordToMdCString(word, -1);
 					try {
 						if (imf.getImage() != null)
 							if (!imf.getImage().isDisposed())
@@ -1666,15 +1055,11 @@ public class SignTextComposite extends Composite implements IBTSEditor {
 		}
 	}
 
+
 	public void clearContent() {
 		canvas.redraw();
 	}
 
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
 
 	@Override
 	public void setEditorSelection(Object selection) {

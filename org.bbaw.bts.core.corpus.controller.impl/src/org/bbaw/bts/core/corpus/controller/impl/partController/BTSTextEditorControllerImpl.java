@@ -240,7 +240,7 @@ public class BTSTextEditorControllerImpl
 		{
 			stringBuilder.deleteCharAt(stringBuilder.length() -1);
 		}
-		logger.info("BTSTextEditorController text as string egydsl: " + stringBuilder.toString());
+		//logger.info("BTSTextEditorController text as string egydsl: " + stringBuilder.toString());
 		
 		doc.set(stringBuilder.toString());// + BTSConstants.EOF);
 
